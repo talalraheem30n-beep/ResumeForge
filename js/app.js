@@ -102,9 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let resume = StorageUtil.getResumeData();
     let config = StorageUtil.getConfigData();
 
-    // Auto-load default professional sample data if no prior draft exists
+    // Initialize an empty draft if no prior draft exists
     if (!hasDraft) {
-        resume = JSON.parse(JSON.stringify(SAMPLE_RESUME_DATA));
+        resume = JSON.parse(JSON.stringify(DEFAULT_RESUME_DATA));
         StorageUtil.saveResumeData(resume);
     }
 

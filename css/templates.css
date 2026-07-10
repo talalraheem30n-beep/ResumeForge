@@ -1,0 +1,498 @@
+/* templates.css - A4 Resume Templates Styling */
+
+/* Dynamic Font Class Overrides (Set on .a4-document) */
+.font-sans-inter { --theme-font: 'Inter', sans-serif; }
+.font-sans-outfit { --theme-font: 'Outfit', sans-serif; }
+.font-serif-lora { --theme-font: 'Lora', serif; }
+.font-serif-playfair { --theme-font: 'Playfair Display', serif; }
+.font-mono-jetbrains { --theme-font: 'JetBrains Mono', monospace; }
+
+/* Dynamic Font Size Overrides */
+.font-size-sm { --theme-font-size: 9.5pt; }
+.font-size-md { --theme-font-size: 10.5pt; }
+.font-size-lg { --theme-font-size: 11.5pt; }
+
+/* Dynamic Page Size Overrides */
+.page-size-a4 {
+    width: 210mm;
+    min-height: 297mm;
+}
+.page-size-letter {
+    width: 216mm; /* 8.5in */
+    min-height: 279mm; /* 11in */
+}
+
+/* Dynamic Line Height Overrides */
+.line-height-compact { line-height: 1.25; }
+.line-height-comfortable { line-height: 1.5; }
+.line-height-relaxed { line-height: 1.85; }
+
+/* Base A4 Styling & Variables */
+.a4-document {
+    font-family: var(--theme-font, 'Inter', sans-serif);
+    font-size: var(--theme-font-size, 10.5pt);
+    background-color: #ffffff;
+    color: #1e293b;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Template layout variables default */
+.a4-document {
+    --accent-color: #6366f1;
+    --accent-light: rgba(99, 102, 241, 0.08);
+    --section-margin: 16px;
+    --page-margin: 20mm;
+}
+
+/* Helper Elements */
+.cv-section {
+    margin-bottom: var(--section-margin);
+    page-break-inside: avoid;
+}
+
+.cv-section-title {
+    font-family: var(--theme-font, 'Inter', sans-serif);
+    font-weight: 700;
+    font-size: 1.2em;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1.5px solid var(--accent-color);
+    padding-bottom: 4px;
+}
+
+.cv-item {
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+}
+
+.cv-item:last-child {
+    margin-bottom: 0;
+}
+
+.cv-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-weight: 600;
+    font-size: 1em;
+}
+
+.cv-item-title {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.cv-item-subtitle {
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+.cv-item-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88em;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.cv-item-date {
+    font-style: italic;
+    color: #64748b;
+    flex-shrink: 0;
+}
+
+.cv-item-details {
+    font-size: 0.9em;
+    color: #334155;
+    margin-top: 4px;
+}
+
+.cv-item-details ul {
+    padding-left: 16px;
+    margin-top: 4px;
+}
+
+.cv-item-details li {
+    margin-bottom: 3px;
+}
+
+/* Profile Photo */
+.cv-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--radius-md, 8px);
+    object-fit: cover;
+    border: 2px solid var(--accent-color);
+}
+
+/* Skill Badges */
+.cv-skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cv-skill-badge {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+/* contact item helpers */
+.cv-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88em;
+    color: #475569;
+    margin-bottom: 6px;
+    word-break: break-all;
+}
+
+.cv-contact-item i {
+    width: 14px;
+    height: 14px;
+    color: var(--accent-color);
+    flex-shrink: 0;
+}
+
+.cv-contact-item a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.cv-contact-item a:hover {
+    text-decoration: underline;
+    color: var(--accent-color);
+}
+
+/* language items */
+.cv-lang-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9em;
+    margin-bottom: 4px;
+    border-bottom: 1px dotted #e2e8f0;
+    padding-bottom: 2px;
+}
+
+.cv-lang-item .lang-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.cv-lang-item .lang-level {
+    font-size: 0.9em;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   TEMPLATE 1: MODERN (Asymmetric Left Sidebar)
+   ========================================================================== */
+.template-modern {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    font-family: var(--theme-font, 'Outfit', sans-serif) !important;
+}
+
+.template-modern .cv-section-title {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+    border-bottom: none !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 1.05em !important;
+    margin-bottom: 14px !important;
+}
+
+.template-modern .cv-sidebar {
+    width: 32%;
+    background-color: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    padding: var(--page-margin) 16px var(--page-margin) var(--page-margin);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+.template-modern .cv-main {
+    width: 68%;
+    padding: var(--page-margin) var(--page-margin) var(--page-margin) 24px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-margin);
+    box-sizing: border-box;
+}
+
+.template-modern .cv-header {
+    margin-bottom: 8px;
+}
+
+.template-modern .cv-name {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 2.2em;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+.template-modern .cv-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--accent-color);
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.template-modern .cv-photo-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+
+/* ==========================================================================
+   TEMPLATE 2: CLASSIC (Symmetric Serif Centered)
+   ========================================================================== */
+.template-classic {
+    padding: var(--page-margin);
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-margin);
+    font-family: var(--theme-font, 'Playfair Display', serif) !important;
+}
+
+.template-classic .cv-header {
+    text-align: center;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 12px;
+    margin-bottom: 10px;
+}
+
+.template-classic .cv-photo-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.template-classic .cv-name {
+    font-size: 2.4em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+}
+
+.template-classic .cv-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--accent-color);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.template-classic .cv-contact-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.template-classic .cv-contact-item {
+    margin-bottom: 0;
+}
+
+.template-classic .cv-section-title {
+    border-bottom: 2px double var(--accent-color) !important;
+    text-align: center;
+    justify-content: center;
+    color: #0f172a;
+    font-size: 1.15em;
+    margin-bottom: 12px;
+}
+
+
+/* ==========================================================================
+   TEMPLATE 3: PROFESSIONAL (Top Accent Band + Two Columns)
+   ========================================================================== */
+.template-professional {
+    display: flex;
+    flex-direction: column;
+}
+
+.template-professional .cv-top-band {
+    height: 8px;
+    background-color: var(--accent-color);
+}
+
+.template-professional .cv-header-container {
+    padding: var(--page-margin) var(--page-margin) 12px var(--page-margin);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.template-professional .cv-header-left {
+    display: flex;
+    flex-direction: column;
+}
+
+.template-professional .cv-name {
+    font-size: 2.2em;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.template-professional .cv-title {
+    font-size: 1.15em;
+    font-weight: 600;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.template-professional .cv-body-cols {
+    display: flex;
+    flex-grow: 1;
+}
+
+.template-professional .cv-main-col {
+    width: 65%;
+    padding: 20px 20px var(--page-margin) var(--page-margin);
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-margin);
+    box-sizing: border-box;
+}
+
+.template-professional .cv-side-col {
+    width: 35%;
+    background-color: #fafafa;
+    border-left: 1px solid #e2e8f0;
+    padding: 20px var(--page-margin) var(--page-margin) 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+
+/* ==========================================================================
+   TEMPLATE 4: MINIMAL (Strict Margins & Space Efficient)
+   ========================================================================== */
+.template-minimal {
+    padding: var(--page-margin);
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-margin);
+}
+
+.template-minimal .cv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 16px;
+    margin-bottom: 6px;
+}
+
+.template-minimal .cv-header-left {
+    display: flex;
+    flex-direction: column;
+}
+
+.template-minimal .cv-name {
+    font-size: 2.1em;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+.template-minimal .cv-title {
+    font-size: 1.05em;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.template-minimal .cv-contact-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    text-align: right;
+    align-items: flex-end;
+}
+
+.template-minimal .cv-contact-item {
+    justify-content: flex-end;
+    margin-bottom: 0;
+}
+
+.template-minimal .cv-section-title {
+    border-bottom: none;
+    font-size: 1.1em;
+    color: #0f172a;
+    padding-bottom: 0;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.template-minimal .cv-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background-color: var(--accent-color);
+}
+
+.template-minimal .cv-item-header {
+    font-size: 0.95em;
+}
+
+.template-minimal .cv-item-subtitle {
+    color: #475569;
+    font-weight: 600;
+}
+
+/* Lang list and references details layout */
+.cv-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.cv-grid-3col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.cv-lang-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #334155;
+}
+.cv-lang-item .lang-name {
+    font-weight: 600;
+}
+.cv-lang-item .lang-level {
+    color: #64748b;
+    font-style: italic;
+}

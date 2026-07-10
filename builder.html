@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Forge - Interactive Builder</title>
+    <meta name="description" content="Design and customize your resume with a real-time builder, professional templates, customization options, and instant PDF output.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/builder.css">
+    <link rel="stylesheet" href="css/templates.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+    <!-- Third Party Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="builder-body">
+    <!-- Builder Top Navbar -->
+    <nav class="builder-nav glass-panel">
+        <div class="nav-left">
+            <a href="index.html" class="logo">
+                <i data-lucide="hammer"></i>
+                <span>ResumeForge</span>
+            </a>
+            <span class="nav-divider"></span>
+            <div class="draft-actions">
+                <button class="btn btn-secondary btn-sm" id="btn-sample" title="Fill form with sample professional details">
+                    <i data-lucide="database"></i> <span>Load Sample</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-clear" title="Clear all input fields and start fresh">
+                    <i data-lucide="trash-2"></i> <span>Clear All</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Completeness Tracker -->
+        <div class="score-container" id="completeness-widget">
+            <div class="score-meta">
+                <span class="score-label">Resume Completion</span>
+                <span class="score-status-text" id="score-status-text">Starting out</span>
+            </div>
+            <div class="score-bar-wrapper">
+                <span class="score-blocks" id="score-blocks">░░░░░░░░░░</span>
+                <span class="score-pct" id="score-text">0%</span>
+            </div>
+            <div class="autosave-status" id="autosave-status">
+                <i data-lucide="cloud-lightning" class="small-icon"></i>
+                <span id="autosave-text">Saved just now</span>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <!-- Import / Export JSON -->
+            <div class="json-actions">
+                <label for="import-json" class="btn btn-secondary btn-sm pointer" title="Upload a previously saved .json resume draft">
+                    <i data-lucide="upload"></i> <span>Import JSON</span>
+                </label>
+                <input type="file" id="import-json" accept=".json" style="display: none;">
+                
+                <button class="btn btn-secondary btn-sm" id="btn-export-json" title="Download your data draft as a JSON file">
+                    <i data-lucide="download"></i> <span>Export JSON</span>
+                </button>
+            </div>
+            
+            <span class="nav-divider"></span>
+            
+            <button class="btn-icon" id="theme-toggle" aria-label="Toggle dark mode">
+                <i data-lucide="moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Split Screen -->
+    <main class="builder-workspace">
+        <!-- Left Side: Inputs & Customization -->
+        <aside class="workspace-inputs" id="panel-inputs">
+            <!-- Tabs/Settings Toolbar -->
+            <div class="toolbar-tabs">
+                <button class="tab-btn active" data-tab="fields-tab">
+                    <i data-lucide="list-todo"></i> Sections
+                </button>
+                <button class="tab-btn" data-tab="settings-tab">
+                    <i data-lucide="sliders"></i> Page Setup
+                </button>
+                <button class="tab-btn" data-tab="ats-tab">
+                    <i data-lucide="check-square"></i> ATS Checker <span class="badge badge-warn" id="ats-badge">0</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: FORM FIELDS -->
+            <div class="tab-content active" id="fields-tab">
+                <div class="accordion">
+                    <!-- 1. PERSONAL INFORMATION -->
+                    <div class="accordion-item active">
+                        <button class="accordion-header" aria-expanded="true">
+                            <span><i data-lucide="user"></i> Personal Details</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="form-grid">
+                                <div class="form-group col-span-2">
+                                    <div class="photo-uploader-container">
+                                        <div class="photo-preview-wrapper">
+                                            <img id="avatar-preview" src="" alt="Profile Preview" class="hidden">
+                                            <div class="photo-placeholder" id="avatar-placeholder">
+                                                <i data-lucide="camera"></i>
+                                            </div>
+                                        </div>
+                                        <div class="photo-uploader-controls">
+                                            <label for="profile-photo-input" class="btn btn-secondary btn-sm pointer">
+                                                <i data-lucide="image-plus"></i> Upload Photo
+                                            </label>
+                                            <input type="file" id="profile-photo-input" accept="image/*" style="display: none;">
+                                            <button class="btn btn-icon btn-sm hidden" id="btn-remove-photo" title="Remove Photo">
+                                                <i data-lucide="x"></i>
+                                            </button>
+                                            <div class="checkbox-group mt-2">
+                                                <input type="checkbox" id="show-photo-toggle" checked>
+                                                <label for="show-photo-toggle">Show photo on resume</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="field-full-name">Full Name</label>
+                                    <input type="text" id="field-full-name" placeholder="John Doe" class="resume-field" data-path="personal.name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="field-job-title">Professional Title</label>
+                                    <input type="text" id="field-job-title" placeholder="Senior Software Engineer" class="resume-field" data-path="personal.title">
+                                </div>
+                                <div class="form-group">
+                                    <label for="field-email">Email Address</label>
+                                    <input type="email" id="field-email" placeholder="john.doe@example.com" class="resume-field" data-path="personal.email">
+                                </div>
+                                <div class="form-group">
+                                    <label for="field-phone">Phone Number</label>
+                                    <input type="tel" id="field-phone" placeholder="+1 (555) 000-0000" class="resume-field" data-path="personal.phone">
+                                </div>
+                                <div class="form-group col-span-2">
+                                    <label for="field-address">Address / Location</label>
+                                    <input type="text" id="field-address" placeholder="San Francisco, CA" class="resume-field" data-path="personal.address">
+                                </div>
+                                <div class="form-group">
+                                    <label for="field-linkedin">LinkedIn URL</label>
+                                    <input type="url" id="field-linkedin" placeholder="linkedin.com/in/username" class="resume-field" data-path="personal.linkedin">
+                                </div>
+                                <div class="form-group">
+                                    <label for="field-github">GitHub URL</label>
+                                    <input type="url" id="field-github" placeholder="github.com/username" class="resume-field" data-path="personal.github">
+                                </div>
+                                <div class="form-group">
+                                    <label for="field-portfolio">Portfolio URL</label>
+                                    <input type="url" id="field-portfolio" placeholder="john-doe.dev" class="resume-field" data-path="personal.portfolio">
+                                </div>
+                                <div class="form-group">
+                                    <label for="field-website">Other Website</label>
+                                    <input type="url" id="field-website" placeholder="blog.john-doe.dev" class="resume-field" data-path="personal.website">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. PROFESSIONAL SUMMARY -->
+                    <div class="accordion-item">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="file-text"></i> Professional Summary</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="form-group">
+                                <label for="field-summary">Brief statement summarizing your key strengths and experience</label>
+                                <textarea id="field-summary" rows="5" placeholder="Result-oriented Software Engineer with 5+ years of experience building scalable web applications..." class="resume-field" data-path="summary"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. WORK EXPERIENCE (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-experience">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="briefcase"></i> Work Experience</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-experience"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="experience">
+                                <i data-lucide="plus"></i> Add Work Experience
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. EDUCATION (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-education">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="graduation-cap"></i> Education</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-education"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="education">
+                                <i data-lucide="plus"></i> Add Education
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 5. PROJECTS (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-projects">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="git-branch"></i> Projects</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-projects"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="projects">
+                                <i data-lucide="plus"></i> Add Project
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 6. SKILLS (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-skills">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="wrench"></i> Skills</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-skills"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="skills">
+                                <i data-lucide="plus"></i> Add Skill
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 7. LANGUAGES (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-languages">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="languages"></i> Languages</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-languages"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="languages">
+                                <i data-lucide="plus"></i> Add Language
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 8. CERTIFICATES (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-certificates">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="award"></i> Certificates</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="scan-certificates-box">
+                                <label for="certificate-file-input" class="btn btn-primary btn-full btn-scan-certs" style="cursor: pointer;">
+                                    <i data-lucide="scan"></i> Scan & Auto-Add Certificate
+                                </label>
+                                <input type="file" id="certificate-file-input" accept=".pdf,.png,.jpg,.jpeg,.txt" class="hidden">
+                                <div class="scan-helper-text">Supports PDF, Images, or Text. Automatically extracts credentials.</div>
+                            </div>
+                            <div class="list-items-container" id="list-certificates"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="certificates">
+                                <i data-lucide="plus"></i> Add Certificate Manually
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 9. ACHIEVEMENTS (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-achievements">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="trophy"></i> Achievements</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-achievements"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="achievements">
+                                <i data-lucide="plus"></i> Add Achievement
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 10. VOLUNTEER EXPERIENCE (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-volunteer">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="heart"></i> Volunteer Experience</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-volunteer"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="volunteer">
+                                <i data-lucide="plus"></i> Add Volunteer Work
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 11. INTERESTS (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-interests">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="compass"></i> Interests</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-interests"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="interests">
+                                <i data-lucide="plus"></i> Add Interest
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 12. REFERENCES (Dynamic List) -->
+                    <div class="accordion-item" id="accordion-references">
+                        <button class="accordion-header" aria-expanded="false">
+                            <span><i data-lucide="users"></i> References</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-body">
+                            <div class="list-items-container" id="list-references"></div>
+                            <button class="btn btn-secondary btn-full btn-add" data-section="references">
+                                <i data-lucide="plus"></i> Add Reference
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PAGE SETTINGS -->
+            <div class="tab-content" id="settings-tab">
+                <div class="config-section">
+                    <h3>Template Designs</h3>
+                    <div class="template-selector-grid">
+                        <div class="template-choice active" data-template="modern">
+                            <div class="choice-visual modern-v"></div>
+                            <span>Modern</span>
+                        </div>
+                        <div class="template-choice" data-template="classic">
+                            <div class="choice-visual classic-v"></div>
+                            <span>Classic</span>
+                        </div>
+                        <div class="template-choice" data-template="professional">
+                            <div class="choice-visual professional-v"></div>
+                            <span>Professional</span>
+                        </div>
+                        <div class="template-choice" data-template="minimal">
+                            <div class="choice-visual minimal-v"></div>
+                            <span>Minimal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3>Accent Colors</h3>
+                    <div class="color-picker-group">
+                        <button class="color-preset-btn active" data-color="#6366f1" style="background-color: #6366f1;"></button>
+                        <button class="color-preset-btn" data-color="#0f766e" style="background-color: #0f766e;"></button>
+                        <button class="color-preset-btn" data-color="#0284c7" style="background-color: #0284c7;"></button>
+                        <button class="color-preset-btn" data-color="#b45309" style="background-color: #b45309;"></button>
+                        <button class="color-preset-btn" data-color="#4d7c0f" style="background-color: #4d7c0f;"></button>
+                        <button class="color-preset-btn" data-color="#be185d" style="background-color: #be185d;"></button>
+                        <div class="custom-color-input-wrapper">
+                            <input type="color" id="accent-color-picker" value="#6366f1" title="Select custom accent color">
+                            <span class="custom-color-label">Custom</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3>Typography</h3>
+                    <div class="form-group">
+                        <label for="settings-font">Font Family Combination</label>
+                        <select id="settings-font">
+                            <option value="font-sans-inter">Inter / Sans-serif (Clean & Modern)</option>
+                            <option value="font-sans-outfit">Outfit / Sans-serif (Stylized & Elegant)</option>
+                            <option value="font-serif-lora">Lora / Serif (Academic & Editorial)</option>
+                            <option value="font-serif-playfair">Playfair Display / Serif (Traditional & Executive)</option>
+                            <option value="font-mono-jetbrains">JetBrains Mono / Monospace (Technical)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="settings-font-size">Base Font Size</label>
+                        <select id="settings-font-size">
+                            <option value="font-size-sm">Small (9pt - High Density)</option>
+                            <option value="font-size-md" selected>Medium (10.5pt - Standard)</option>
+                            <option value="font-size-lg">Large (12pt - Low Density)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3>Page Layout</h3>
+                    <div class="form-grid" style="padding-top: 0; gap: 12px;">
+                        <div class="form-group">
+                            <label for="settings-page-size">Page Size</label>
+                            <select id="settings-page-size">
+                                <option value="a4" selected>A4 (Standard)</option>
+                                <option value="letter">Letter (US)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-page-margins-select">Page Margins</label>
+                            <select id="settings-page-margins-select">
+                                <option value="10">Small (10mm)</option>
+                                <option value="20" selected>Normal (20mm)</option>
+                                <option value="30">Large (30mm)</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-span-2">
+                            <label for="settings-line-height">Line Height / Spacing</label>
+                            <select id="settings-line-height">
+                                <option value="line-height-compact">Compact (1.2)</option>
+                                <option value="line-height-comfortable" selected>Comfortable (1.5)</option>
+                                <option value="line-height-relaxed">Relaxed (1.85)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group mt-2">
+                        <div class="slider-header">
+                            <label for="settings-section-spacing">Section Spacing</label>
+                            <span id="label-section-spacing">16px</span>
+                        </div>
+                        <input type="range" id="settings-section-spacing" min="8" max="32" step="2" value="16">
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3>Keyboard Shortcuts</h3>
+                    <div class="shortcuts-guide-grid">
+                        <div class="shortcut-row"><kbd>Ctrl + K</kbd> <span>Command Palette</span></div>
+                        <div class="shortcut-row"><kbd>Ctrl + Z</kbd> <span>Undo History</span></div>
+                        <div class="shortcut-row"><kbd>Ctrl + Y</kbd> <span>Redo History</span></div>
+                        <div class="shortcut-row"><kbd>Ctrl + S</kbd> <span>Save Draft</span></div>
+                        <div class="shortcut-row"><kbd>Ctrl + P</kbd> <span>Print Resume</span></div>
+                        <div class="shortcut-row"><kbd>Ctrl + D</kbd> <span>Export PDF</span></div>
+                        <div class="shortcut-row"><kbd>ESC</kbd> <span>Close Modals</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: ATS CHECKER -->
+            <div class="tab-content" id="ats-tab">
+                <div class="ats-checker-panel">
+                    <div class="ats-summary">
+                        <div class="ats-icon-box" id="ats-score-status">
+                            <i data-lucide="shield-check"></i>
+                        </div>
+                        <div>
+                            <h3 id="ats-eval-title">ATS Check Pending</h3>
+                            <p id="ats-eval-subtitle">Fill out sections to trigger evaluation.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="ats-recommendations-list" id="ats-suggestions">
+                        <!-- suggestions dynamically loaded -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Side: Live A4 Preview -->
+        <section class="workspace-preview" id="panel-preview">
+            <!-- Preview Control Bar -->
+            <div class="preview-actions glass-panel">
+                <div class="preview-left-actions">
+                    <span class="preview-title">A4 Page Preview</span>
+                    <span class="page-count" id="lbl-page-count">1 Page</span>
+                </div>
+                
+                <div class="preview-scale-control">
+                    <button class="btn-icon btn-sm" id="btn-zoom-out" title="Zoom Out"><i data-lucide="minus"></i></button>
+                    <span id="zoom-text">100%</span>
+                    <button class="btn-icon btn-sm" id="btn-zoom-in" title="Zoom In"><i data-lucide="plus"></i></button>
+                    <button class="btn-icon btn-sm" id="btn-zoom-reset" title="Fit to width"><i data-lucide="maximize-2"></i></button>
+                </div>
+
+                <div class="preview-right-actions">
+                    <button class="btn btn-secondary btn-sm" id="btn-print">
+                        <i data-lucide="printer"></i> Print Resume
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="btn-pdf">
+                        <i data-lucide="download"></i> Download PDF
+                    </button>
+                    <button class="btn-icon btn-sm" id="btn-fullscreen" title="Toggle Fullscreen preview">
+                        <i data-lucide="expand"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Sheet Container -->
+            <div class="preview-container-viewport">
+                <div class="a4-page-wrapper" id="a4-page-wrapper">
+                    <!-- The generated CV goes inside here -->
+                    <div class="a4-document template-modern" id="resume-document">
+                        <!-- Live preview loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Mobile Navigation Floating Panel -->
+    <div class="mobile-nav-bar">
+        <button class="mobile-nav-btn active" id="btn-mob-edit">
+            <i data-lucide="edit-3"></i>
+            <span>Edit</span>
+        </button>
+        <button class="mobile-nav-btn" id="btn-mob-preview">
+            <i data-lucide="eye"></i>
+            <span>Preview</span>
+        </button>
+        <div class="mobile-nav-divider"></div>
+        <button class="mobile-nav-action-btn" id="btn-mob-pdf">
+            <i data-lucide="download"></i>
+        </button>
+    </div>
+
+    <!-- Confirm dialog modal -->
+    <div class="modal-backdrop hidden" id="modal-clear-confirm">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3>Start Over?</h3>
+                <button class="btn-icon btn-sm btn-close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to clear your entire resume? This action will permanently remove all text, uploaded images, and custom history. Your current progress cannot be restored.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-modal-cancel">Cancel</button>
+                <button class="btn btn-danger" id="btn-modal-confirm">Yes, Clear All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Palette Modal -->
+    <div class="modal-backdrop hidden" id="modal-command-palette">
+        <div class="modal-content command-palette-content glass-panel">
+            <div class="command-palette-search-wrapper">
+                <i data-lucide="search" class="palette-search-icon"></i>
+                <input type="text" id="command-palette-input" placeholder="Type a command or jump to section..." autocomplete="off">
+                <span class="command-palette-esc-badge">ESC</span>
+            </div>
+            <div class="command-palette-results" id="command-palette-results">
+                <!-- Results dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Export Loading Curtain -->
+    <div class="modal-backdrop hidden" id="modal-pdf-loading" style="z-index: 1002;">
+        <div class="pdf-loading-box">
+            <div class="spinner"></div>
+            <h3 id="pdf-loading-title">Preparing Resume...</h3>
+            <p id="pdf-loading-subtitle">Optimizing page scaling and alignment.</p>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-notification hidden" id="app-toast">
+        <i data-lucide="check-circle" class="toast-icon"></i>
+        <span class="toast-message">Resume Saved!</span>
+    </div>
+
+    <!-- Script tags for application layers -->
+    <script src="js/storage.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/preview.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/builder.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Trigger initial lucide rendering
+        lucide.createIcons();
+    </script>
+</body>
+</html>

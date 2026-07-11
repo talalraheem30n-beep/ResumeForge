@@ -52,6 +52,9 @@ const PreviewSystem = {
             });
         }
 
+        // 6.5. Apply Section-Aware Pagination
+        this.paginateResume(previewDoc, config);
+
         // 7. Recalculate layout scale and page boundaries
         this.updatePageCountAndBreaks();
         this.scalePreview();
@@ -158,6 +161,200 @@ const PreviewSystem = {
     },
 
     /**
+     * Layout-aware section and item pagination
+     * @param {HTMLElement} doc The resume document element
+     * @param {Object} config The styling/page configurations
+     */
+    paginateResume(doc, config) {
+        if (!doc) return;
+        
+        // Save current transform to restore later
+        const originalTransform = doc.style.transform;
+        doc.style.transform = 'none';
+        
+        // Get template name
+        const template = config.template || 'modern';
+        
+        // Remove existing spacers
+        doc.querySelectorAll('.pdf-page-break-spacer').forEach(el => el.remove());
+        
+        // Page configurations
+        const isLetter = doc.classList.contains('page-size-letter') || config.pageSize === 'letter';
+        const pageHeight = isLetter ? 1056 : 1123;
+        
+        const marginMm = parseFloat(config.margins || 20);
+        const marginPx = Math.round(marginMm * 3.779527559);
+        const topMargin = marginPx;
+        const bottomMargin = marginPx;
+        const usablePageHeight = pageHeight - topMargin - bottomMargin;
+        
+        // Get containers to paginate based on template
+        const containers = this.getContainersToPaginate(doc, template);
+        
+        // Paginate each container
+        containers.forEach(container => {
+            this.paginateContainer(doc, container, pageHeight, topMargin, bottomMargin, usablePageHeight);
+        });
+        
+        // Restore original transform
+        doc.style.transform = originalTransform;
+    },
+
+    /**
+     * Get separate column containers to paginate independently
+     */
+    getContainersToPaginate(doc, template) {
+        if (template === 'modern') {
+            const sidebar = doc.querySelector('.cv-sidebar');
+            const main = doc.querySelector('.cv-main');
+            return [sidebar, main].filter(Boolean);
+        } else if (template === 'professional') {
+            const sideCol = doc.querySelector('.cv-side-col');
+            const mainCol = doc.querySelector('.cv-main-col');
+            return [sideCol, mainCol].filter(Boolean);
+        } else {
+            return [doc];
+        }
+    },
+
+    /**
+     * Paginate a single container flow of sections and items
+     */
+    paginateContainer(doc, container, pageHeight, topMargin, bottomMargin, usablePageHeight) {
+        const documentRect = doc.getBoundingClientRect();
+        
+        // Get sections within the container
+        const sections = Array.from(container.querySelectorAll('.cv-section')).filter(section => {
+            return section.parentElement === container || 
+                   section.parentElement.classList.contains('cv-grid-2col') || 
+                   section.parentElement.classList.contains('cv-grid-3col') ||
+                   section.parentElement.classList.contains('cv-body-cols') ||
+                   section.parentElement.parentElement === container;
+        });
+        
+        let pageIndex = 0;
+        
+        for (let sIndex = 0; sIndex < sections.length; sIndex++) {
+            const section = sections[sIndex];
+            
+            // Measure current section top
+            let sectionRect = section.getBoundingClientRect();
+            let sectionTop = sectionRect.top - documentRect.top;
+            
+            // Advance pageIndex to match the page where this section starts
+            while (sectionTop >= (pageIndex + 1) * pageHeight) {
+                pageIndex++;
+            }
+            
+            let pageTop = pageIndex * pageHeight;
+            let pageBottomLimit = pageTop + pageHeight - bottomMargin;
+            
+            let sectionHeight = sectionRect.height;
+            let sectionBottom = sectionTop + sectionHeight;
+            
+            // 1. Check if the entire section fits on the current page
+            if (sectionBottom <= pageBottomLimit) {
+                // Section fits completely on this page.
+                continue;
+            }
+            
+            // 2. The section does NOT fit on the current page.
+            // Can it fit on the next page?
+            const fitsOnNextPage = sectionHeight <= usablePageHeight;
+            
+            if (fitsOnNextPage && sectionTop > (pageTop + topMargin + 5)) {
+                // Push the entire section to the next page
+                const spacer = document.createElement('div');
+                spacer.className = 'pdf-page-break-spacer';
+                const nextPageTop = (pageIndex + 1) * pageHeight;
+                const spacerHeight = (nextPageTop + topMargin) - sectionTop;
+                spacer.style.height = `${spacerHeight}px`;
+                
+                section.parentNode.insertBefore(spacer, section);
+                
+                // Advance to the next page
+                pageIndex++;
+                
+                // Re-measure after pushing
+                sectionRect = section.getBoundingClientRect();
+                sectionTop = sectionRect.top - documentRect.top;
+                continue;
+            }
+            
+            // 3. Section too tall for one page or already at the top. Check items inside.
+            const heading = section.querySelector('.cv-section-title');
+            const items = Array.from(section.querySelectorAll('.cv-item'));
+            
+            if (items.length > 0) {
+                // Check if heading + first item fits together to prevent orphan headings
+                if (heading) {
+                    const headingRect = heading.getBoundingClientRect();
+                    const headingTop = headingRect.top - documentRect.top;
+                    
+                    while (headingTop >= (pageIndex + 1) * pageHeight) {
+                        pageIndex++;
+                    }
+                    pageTop = pageIndex * pageHeight;
+                    pageBottomLimit = pageTop + pageHeight - bottomMargin;
+                    
+                    const firstItem = items[0];
+                    const firstItemRect = firstItem.getBoundingClientRect();
+                    const firstItemBottom = firstItemRect.bottom - documentRect.top;
+                    
+                    if (firstItemBottom > pageBottomLimit && sectionTop > (pageTop + topMargin + 5)) {
+                        const spacer = document.createElement('div');
+                        spacer.className = 'pdf-page-break-spacer';
+                        const nextPageTop = (pageIndex + 1) * pageHeight;
+                        const spacerHeight = (nextPageTop + topMargin) - sectionTop;
+                        spacer.style.height = `${spacerHeight}px`;
+                        
+                        section.parentNode.insertBefore(spacer, section);
+                        
+                        pageIndex++;
+                        
+                        // Re-measure
+                        sectionRect = section.getBoundingClientRect();
+                        sectionTop = sectionRect.top - documentRect.top;
+                        pageTop = pageIndex * pageHeight;
+                        pageBottomLimit = pageTop + pageHeight - bottomMargin;
+                    }
+                }
+                
+                // Process each item individually
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    let itemRect = item.getBoundingClientRect();
+                    let itemTop = itemRect.top - documentRect.top;
+                    let itemBottom = itemRect.bottom - documentRect.top;
+                    
+                    while (itemTop >= (pageIndex + 1) * pageHeight) {
+                        pageIndex++;
+                    }
+                    pageTop = pageIndex * pageHeight;
+                    pageBottomLimit = pageTop + pageHeight - bottomMargin;
+                    
+                    if (itemBottom > pageBottomLimit && itemTop > (pageTop + topMargin + 5)) {
+                        const spacer = document.createElement('div');
+                        spacer.className = 'pdf-page-break-spacer';
+                        const nextPageTop = (pageIndex + 1) * pageHeight;
+                        const spacerHeight = (nextPageTop + topMargin) - itemTop;
+                        spacer.style.height = `${spacerHeight}px`;
+                        
+                        item.parentNode.insertBefore(spacer, item);
+                        
+                        pageIndex++;
+                        
+                        // Re-measure
+                        itemRect = item.getBoundingClientRect();
+                        itemTop = itemRect.top - documentRect.top;
+                        itemBottom = itemRect.bottom - documentRect.top;
+                    }
+                }
+            }
+        }
+    },
+
+    /**
      * Profile Photo Base64 Uploader Reader
      * @param {File} file Uploaded image file
      * @param {Function} callback Callback returns base64 string
@@ -196,3 +393,6 @@ window.addEventListener('resize', () => {
         PreviewSystem.scalePreview();
     }
 });
+
+// Expose PreviewSystem globally
+window.PreviewSystem = PreviewSystem;

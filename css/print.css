@@ -72,9 +72,9 @@
         transform-origin: top left !important;
         padding: 0 !important;
         margin: 0 !important;
-        width: 210mm !important;
-        height: 297mm !important;
         display: block !important;
+        width: 100% !important;
+        height: auto !important;
     }
 
     .a4-document {
@@ -82,14 +82,18 @@
         border: none !important;
         margin: 0 !important;
         padding: var(--theme-page-margin-val, 20mm) !important;
-        width: 210mm !important;
-        min-height: 297mm !important;
-        height: 297mm !important;
         box-sizing: border-box !important;
         position: relative !important;
-        overflow: hidden !important;
-        page-break-after: always;
-        page-break-inside: avoid;
+        overflow: visible !important;
+        height: auto !important;
+    }
+
+    .a4-document.page-size-a4 {
+        width: 210mm !important;
+    }
+
+    .a4-document.page-size-letter {
+        width: 216mm !important;
     }
 
     /* Special padding adjustments for Modern template with side columns in print mode */
@@ -119,6 +123,5 @@
 
 /* Page configurations */
 @page {
-    size: A4 portrait;
     margin: 0;
 }

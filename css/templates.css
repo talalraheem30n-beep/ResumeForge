@@ -49,7 +49,21 @@
 /* Helper Elements */
 .cv-section {
     margin-bottom: var(--section-margin);
-    page-break-inside: avoid;
+    page-break-inside: auto;
+    break-inside: auto;
+}
+
+.pdf-page-break-spacer {
+    display: block;
+    width: 100%;
+    flex-shrink: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: transparent !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none;
 }
 
 .cv-section-title {
@@ -69,6 +83,7 @@
 .cv-item {
     margin-bottom: 12px;
     page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .cv-item:last-child {

@@ -105,6 +105,11 @@ const ExportSystem = {
         wrapperEl.style.width = `${widthPx}px`;
         wrapperEl.style.height = 'auto'; // allow it to stretch naturally
         
+        // Re-run pagination on docEl to guarantee exact spacer heights for export dimensions
+        if (window.PreviewSystem && typeof PreviewSystem.paginateResume === 'function') {
+            PreviewSystem.paginateResume(docEl, typeof configData !== 'undefined' ? configData : {});
+        }
+        
         // Hide temporary page break indicators from printing
         const indicators = docEl.querySelectorAll('.page-break-indicator');
         indicators.forEach(i => i.style.display = 'none');
@@ -127,6 +132,11 @@ const ExportSystem = {
             wrapperEl.style.width = originalWrapperWidth;
             wrapperEl.style.height = originalWrapperHeight;
             indicators.forEach(i => i.style.display = 'block');
+
+            // Re-run pagination with current configData to sync the preview
+            if (window.PreviewSystem && typeof PreviewSystem.paginateResume === 'function') {
+                PreviewSystem.paginateResume(docEl, typeof configData !== 'undefined' ? configData : {});
+            }
 
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({
@@ -188,6 +198,11 @@ const ExportSystem = {
             wrapperEl.style.width = originalWrapperWidth;
             wrapperEl.style.height = originalWrapperHeight;
             indicators.forEach(i => i.style.display = 'block');
+
+            // Re-run pagination with current configData to sync the preview
+            if (window.PreviewSystem && typeof PreviewSystem.paginateResume === 'function') {
+                PreviewSystem.paginateResume(docEl, typeof configData !== 'undefined' ? configData : {});
+            }
             
             if (loader) loader.classList.add('hidden');
             this.showToast('An error occurred during PDF generation.', 'error');

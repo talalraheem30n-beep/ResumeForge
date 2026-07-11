@@ -237,6 +237,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Dynamic Lists
             BuilderSystem.renderAllDynamicLists();
             
+            // Sync customization controls
+            BuilderSystem.syncCustomizationControls();
+            
             // Live preview
             PreviewSystem.updatePreview(resumeData, configData);
             BuilderSystem.runEvaluation();
@@ -624,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         HistorySystem.syncStateToForm();
 
         // Re-apply config controls (template selector, font, colors, etc.)
-        BuilderSystem.setupCustomizationControls();
+        BuilderSystem.syncCustomizationControls();
 
         modal.classList.add('hidden');
         ExportSystem.showToast('Resume cleared. Starting fresh!');
@@ -636,15 +639,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = e.target.files[0];
         if (file) {
             ExportSystem.importJSON(file, (importedData) => {
+                let importedResume = {};
+                let importedConfig = {};
+                
+                if (importedData && importedData.version === "2.0" && importedData.resumeData) {
+                    importedResume = importedData.resumeData;
+                    importedConfig = importedData.configData || {};
+                } else {
+                    importedResume = importedData || {};
+                }
+                
                 // Merge imported data with defaults to ensure all arrays exist
                 const merged = JSON.parse(JSON.stringify(DEFAULT_RESUME_DATA));
                 // Deep-copy imported keys over defaults
-                for (let key in importedData) {
-                    if (importedData.hasOwnProperty(key)) {
-                        if (key === 'personal' && typeof importedData[key] === 'object') {
-                            Object.assign(merged.personal, importedData.personal);
+                for (let key in importedResume) {
+                    if (importedResume.hasOwnProperty(key)) {
+                        if (key === 'personal' && typeof importedResume[key] === 'object') {
+                            Object.assign(merged.personal, importedResume.personal);
                         } else {
-                            merged[key] = importedData[key];
+                            merged[key] = importedResume[key];
                         }
                     }
                 }
@@ -654,8 +667,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     delete resumeData[key];
                 }
                 Object.assign(resumeData, merged);
-
                 StorageUtil.saveResumeData(resumeData);
+
+                // Update configuration if present in imported file
+                if (importedConfig && Object.keys(importedConfig).length > 0) {
+                    for (let key in configData) {
+                        delete configData[key];
+                    }
+                    Object.assign(configData, JSON.parse(JSON.stringify(importedConfig)));
+                    StorageUtil.saveConfigData(configData);
+                    
+                    // Apply loaded config UI states (theme, activePreset, etc.)
+                    document.documentElement.setAttribute('data-theme', configData.theme || 'light');
+                    updateThemeIcon(configData.theme || 'light');
+                }
+
                 HistorySystem.init(resumeData);
                 HistorySystem.syncStateToForm();
 
@@ -667,7 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-export-json').addEventListener('click', () => {
-        ExportSystem.exportJSON(resumeData);
+        ExportSystem.exportJSON(resumeData, configData);
     });
 
     // PDF and Print Buttons
@@ -737,6 +763,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mobPdfBtn) {
         mobPdfBtn.addEventListener('click', () => {
             ExportSystem.exportPDF(resumeData.personal.name);
+        });
+    }
+
+    // Accessibility focus handler for profile uploader label
+    const photoInputEl = document.getElementById('profile-photo-input');
+    const photoLabelEl = document.querySelector('label[for="profile-photo-input"]');
+    if (photoInputEl && photoLabelEl) {
+        photoInputEl.addEventListener('focus', () => {
+            photoLabelEl.style.outline = '2px solid var(--primary)';
+            photoLabelEl.style.outlineOffset = '2px';
+        });
+        photoInputEl.addEventListener('blur', () => {
+            photoLabelEl.style.outline = 'none';
         });
     }
 

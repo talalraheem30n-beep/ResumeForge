@@ -20,8 +20,8 @@
         color: #000000 !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 210mm !important;
-        height: 297mm !important;
+        width: 100% !important;
+        height: auto !important;
         font-size: var(--theme-font-size, 10.5pt) !important;
         overflow: visible !important;
         -webkit-print-color-adjust: exact !important;
@@ -41,8 +41,8 @@
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
-        width: 210mm !important;
-        height: 297mm !important;
+        width: 100% !important;
+        height: auto !important;
         margin: 0 !important;
         padding: 0 !important;
         overflow: visible !important;
@@ -50,8 +50,8 @@
 
     .workspace-preview {
         display: block !important;
-        width: 210mm !important;
-        height: 297mm !important;
+        width: 100% !important;
+        height: auto !important;
         margin: 0 !important;
         padding: 0 !important;
         background: none !important;
@@ -62,8 +62,8 @@
         display: block !important;
         padding: 0 !important;
         margin: 0 !important;
-        width: 210mm !important;
-        height: 297mm !important;
+        width: 100% !important;
+        height: auto !important;
         overflow: visible !important;
     }
 
@@ -85,15 +85,18 @@
         box-sizing: border-box !important;
         position: relative !important;
         overflow: visible !important;
-        height: auto !important;
+        page-break-after: always !important;
+        break-after: page !important;
     }
 
     .a4-document.page-size-a4 {
         width: 210mm !important;
+        height: 297mm !important;
     }
 
     .a4-document.page-size-letter {
         width: 216mm !important;
+        height: 279mm !important;
     }
 
     /* Special padding adjustments for Modern template with side columns in print mode */

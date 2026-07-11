@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self';">
     <title>Resume Forge - Interactive Builder</title>
     <meta name="description" content="Design and customize your resume with a real-time builder, professional templates, customization options, and instant PDF output.">
     <link rel="stylesheet" href="css/style.css">
@@ -110,7 +111,7 @@
                                             <label for="profile-photo-input" class="btn btn-secondary btn-sm pointer">
                                                 <i data-lucide="image-plus"></i> Upload Photo
                                             </label>
-                                            <input type="file" id="profile-photo-input" accept="image/*" style="display: none;">
+                                            <input type="file" id="profile-photo-input" accept="image/*" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
                                             <button class="btn btn-icon btn-sm hidden" id="btn-remove-photo" title="Remove Photo">
                                                 <i data-lucide="x"></i>
                                             </button>
@@ -123,39 +124,39 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="field-full-name">Full Name</label>
-                                    <input type="text" id="field-full-name" placeholder="John Doe" class="resume-field" data-path="personal.name">
+                                    <input type="text" id="field-full-name" placeholder="John Doe" class="resume-field" data-path="personal.name" maxlength="80">
                                 </div>
                                 <div class="form-group">
                                     <label for="field-job-title">Professional Title</label>
-                                    <input type="text" id="field-job-title" placeholder="Senior Software Engineer" class="resume-field" data-path="personal.title">
+                                    <input type="text" id="field-job-title" placeholder="Senior Software Engineer" class="resume-field" data-path="personal.title" maxlength="80">
                                 </div>
                                 <div class="form-group">
                                     <label for="field-email">Email Address</label>
-                                    <input type="email" id="field-email" placeholder="john.doe@example.com" class="resume-field" data-path="personal.email">
+                                    <input type="email" id="field-email" placeholder="john.doe@example.com" class="resume-field" data-path="personal.email" maxlength="80">
                                 </div>
                                 <div class="form-group">
                                     <label for="field-phone">Phone Number</label>
-                                    <input type="tel" id="field-phone" placeholder="+1 (555) 000-0000" class="resume-field" data-path="personal.phone">
+                                    <input type="tel" id="field-phone" placeholder="+1 (555) 000-0000" class="resume-field" data-path="personal.phone" maxlength="30">
                                 </div>
                                 <div class="form-group col-span-2">
                                     <label for="field-address">Address / Location</label>
-                                    <input type="text" id="field-address" placeholder="San Francisco, CA" class="resume-field" data-path="personal.address">
+                                    <input type="text" id="field-address" placeholder="San Francisco, CA" class="resume-field" data-path="personal.address" maxlength="120">
                                 </div>
                                 <div class="form-group">
                                     <label for="field-linkedin">LinkedIn URL</label>
-                                    <input type="url" id="field-linkedin" placeholder="linkedin.com/in/username" class="resume-field" data-path="personal.linkedin">
+                                    <input type="url" id="field-linkedin" placeholder="linkedin.com/in/username" class="resume-field" data-path="personal.linkedin" maxlength="150">
                                 </div>
                                 <div class="form-group">
                                     <label for="field-github">GitHub URL</label>
-                                    <input type="url" id="field-github" placeholder="github.com/username" class="resume-field" data-path="personal.github">
+                                    <input type="url" id="field-github" placeholder="github.com/username" class="resume-field" data-path="personal.github" maxlength="150">
                                 </div>
                                 <div class="form-group">
                                     <label for="field-portfolio">Portfolio URL</label>
-                                    <input type="url" id="field-portfolio" placeholder="john-doe.dev" class="resume-field" data-path="personal.portfolio">
+                                    <input type="url" id="field-portfolio" placeholder="john-doe.dev" class="resume-field" data-path="personal.portfolio" maxlength="150">
                                 </div>
                                 <div class="form-group">
                                     <label for="field-website">Other Website</label>
-                                    <input type="url" id="field-website" placeholder="blog.john-doe.dev" class="resume-field" data-path="personal.website">
+                                    <input type="url" id="field-website" placeholder="blog.john-doe.dev" class="resume-field" data-path="personal.website" maxlength="150">
                                 </div>
                             </div>
                         </div>
@@ -170,7 +171,7 @@
                         <div class="accordion-body">
                             <div class="form-group">
                                 <label for="field-summary">Brief statement summarizing your key strengths and experience</label>
-                                <textarea id="field-summary" rows="5" placeholder="Result-oriented Software Engineer with 5+ years of experience building scalable web applications..." class="resume-field" data-path="summary"></textarea>
+                                <textarea id="field-summary" rows="5" placeholder="Result-oriented Software Engineer with 5+ years of experience building scalable web applications..." class="resume-field" data-path="summary" maxlength="1500"></textarea>
                             </div>
                         </div>
                     </div>
@@ -489,7 +490,7 @@
             <div class="preview-container-viewport">
                 <div class="a4-page-wrapper" id="a4-page-wrapper">
                     <!-- The generated CV goes inside here -->
-                    <div class="a4-document template-modern" id="resume-document">
+                    <div class="resume-document-container" id="resume-document">
                         <!-- Live preview loaded dynamically -->
                     </div>
                 </div>
@@ -560,12 +561,12 @@
     </div>
 
     <!-- Script tags for application layers -->
-    <script src="js/storage.js"></script>
-    <script src="js/templates.js"></script>
-    <script src="js/preview.js"></script>
-    <script src="js/export.js"></script>
-    <script src="js/builder.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/storage.js?v=2.0"></script>
+    <script src="js/templates.js?v=2.0"></script>
+    <script src="js/preview.js?v=2.0"></script>
+    <script src="js/export.js?v=2.0"></script>
+    <script src="js/builder.js?v=2.0"></script>
+    <script src="js/app.js?v=2.0"></script>
     <script>
         // Trigger initial lucide rendering
         lucide.createIcons();

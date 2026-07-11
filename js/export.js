@@ -5,13 +5,18 @@ const ExportSystem = {
      * Downloads the current resume state as a formatted JSON draft
      * @param {Object} data Current resume data object
      */
-    exportJSON(data) {
+    exportJSON(resume, config) {
         try {
-            const dataStr = JSON.stringify(data, null, 4);
+            const payload = {
+                version: "2.0",
+                resumeData: resume,
+                configData: config
+            };
+            const dataStr = JSON.stringify(payload, null, 4);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             
-            const name = data.personal.name ? data.personal.name.trim().replace(/\s+/g, '_') : 'ResumeForge';
+            const name = resume.personal.name ? resume.personal.name.trim().replace(/\s+/g, '_') : 'ResumeForge';
             const filename = `${name}_draft.json`;
             
             const link = document.createElement('a');
@@ -65,7 +70,7 @@ const ExportSystem = {
      * Generates and downloads A4 PDF using html2canvas and jsPDF
      * @param {string} resumeName User's full name to title file
      */
-    exportPDF(resumeName) {
+    async exportPDF(resumeName) {
         const docEl = document.getElementById('resume-document');
         const wrapperEl = document.getElementById('a4-page-wrapper');
         
@@ -86,13 +91,11 @@ const ExportSystem = {
         
         // Save current scaling configs to restore later
         const originalTransform = docEl.style.transform;
-        const originalMarginBottom = docEl.style.marginBottom;
         const originalWrapperWidth = wrapperEl.style.width;
         const originalWrapperHeight = wrapperEl.style.height;
 
         // Reset scaling to 1.0 (actual sizes) for high fidelity capturing
         docEl.style.transform = 'none';
-        docEl.style.marginBottom = '0';
         
         // Check dynamic page size choice (A4 vs Letter)
         const isLetter = (typeof configData !== 'undefined' && configData.pageSize === 'letter');
@@ -105,77 +108,38 @@ const ExportSystem = {
         wrapperEl.style.width = `${widthPx}px`;
         wrapperEl.style.height = 'auto'; // allow it to stretch naturally
         
-        // Re-run pagination on docEl to guarantee exact spacer heights for export dimensions
+        // Re-run pagination on docEl to guarantee exact partition
         if (window.PreviewSystem && typeof PreviewSystem.paginateResume === 'function') {
             PreviewSystem.paginateResume(docEl, typeof configData !== 'undefined' ? configData : {});
         }
         
-        // Hide temporary page break indicators from printing
-        const indicators = docEl.querySelectorAll('.page-break-indicator');
-        indicators.forEach(i => i.style.display = 'none');
-
         // Update loader text
         if (loaderTitle) loaderTitle.innerText = 'Exporting...';
         if (loaderSubtitle) loaderSubtitle.innerText = 'Rendering canvas frames at high density.';
 
-        // Capture document via html2canvas at scale 2.0x for crisp print density
-        html2canvas(docEl, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            logging: false
-        }).then(canvas => {
-            // Restore scaling configurations in the UI
-            docEl.style.transform = originalTransform;
-            docEl.style.marginBottom = originalMarginBottom;
-            wrapperEl.style.width = originalWrapperWidth;
-            wrapperEl.style.height = originalWrapperHeight;
-            indicators.forEach(i => i.style.display = 'block');
+        const pageElements = Array.from(docEl.querySelectorAll('.cv-page'));
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: pdfFormat
+        });
 
-            // Re-run pagination with current configData to sync the preview
-            if (window.PreviewSystem && typeof PreviewSystem.paginateResume === 'function') {
-                PreviewSystem.paginateResume(docEl, typeof configData !== 'undefined' ? configData : {});
-            }
-
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: pdfFormat
-            });
-            
-            const canvasWidthPx = canvas.width;
-            const canvasHeightPx = canvas.height;
-            
-            // Calculate scale ratio between canvas pixels and page mm
-            const pxScale = canvasWidthPx / widthMm;
-            const pageHeightPx = heightMm * pxScale;
-            const totalPages = Math.ceil(canvasHeightPx / pageHeightPx);
-
-            for (let i = 0; i < totalPages; i++) {
+        try {
+            for (let i = 0; i < pageElements.length; i++) {
+                const pageEl = pageElements[i];
                 if (i > 0) {
                     pdf.addPage();
                 }
-
-                // Slice canvas for this specific page
-                const pageCanvas = document.createElement('canvas');
-                pageCanvas.width = canvasWidthPx;
-                const sliceHeight = Math.min(pageHeightPx, canvasHeightPx - (i * pageHeightPx));
-                pageCanvas.height = sliceHeight;
-
-                const pageCtx = pageCanvas.getContext('2d');
-                pageCtx.drawImage(
-                    canvas,
-                    0, i * pageHeightPx, canvasWidthPx, sliceHeight, // source rect
-                    0, 0, canvasWidthPx, sliceHeight // destination rect
-                );
-
-                const imgData = pageCanvas.toDataURL('image/jpeg', 0.95);
-                const pageHeightMmCalculated = sliceHeight / pxScale;
-                
-                // Add page slice into PDF page starting at 0,0 top-left
-                pdf.addImage(imgData, 'JPEG', 0, 0, widthMm, pageHeightMmCalculated);
+                const canvas = await html2canvas(pageEl, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                pdf.addImage(imgData, 'JPEG', 0, 0, widthMm, heightMm);
             }
 
             const cleanName = resumeName ? resumeName.trim().replace(/\s+/g, '_') : 'ResumeForge';
@@ -185,28 +149,25 @@ const ExportSystem = {
             if (loaderSubtitle) loaderSubtitle.innerText = 'Your PDF has been saved successfully.';
             
             this.showToast('PDF Exported Successfully!');
-            
-            // Wait 1.5 seconds and hide loader overlay
-            setTimeout(() => {
-                if (loader) loader.classList.add('hidden');
-            }, 1200);
-        }).catch(err => {
+        } catch (err) {
             console.error('Error during canvas rendering', err);
-            // Restore scaling configurations even on error
+            this.showToast('Error generating PDF.', 'error');
+        } finally {
+            // Restore scaling configurations in the UI
             docEl.style.transform = originalTransform;
-            docEl.style.marginBottom = originalMarginBottom;
             wrapperEl.style.width = originalWrapperWidth;
             wrapperEl.style.height = originalWrapperHeight;
-            indicators.forEach(i => i.style.display = 'block');
 
             // Re-run pagination with current configData to sync the preview
             if (window.PreviewSystem && typeof PreviewSystem.paginateResume === 'function') {
                 PreviewSystem.paginateResume(docEl, typeof configData !== 'undefined' ? configData : {});
             }
-            
-            if (loader) loader.classList.add('hidden');
-            this.showToast('An error occurred during PDF generation.', 'error');
-        });
+
+            // Wait 1.2 seconds and hide loader overlay
+            setTimeout(() => {
+                if (loader) loader.classList.add('hidden');
+            }, 1200);
+        }
     },
 
     /**

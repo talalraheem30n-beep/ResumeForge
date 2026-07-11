@@ -19,7 +19,8 @@ const BuilderSystem = {
         this.setupTabs();
         this.bindStaticFields();
         this.renderAllDynamicLists();
-        this.setupCustomizationControls();
+        this.bindCustomizationControls();
+        this.syncCustomizationControls();
         this.setupCertificateScanner();
         this.runEvaluation();
 
@@ -114,14 +115,55 @@ const BuilderSystem = {
         photoInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                PreviewSystem.handlePhotoUpload(file, (base64) => {
-                    resumeData.personal.photo = base64;
-                    avatarPreview.src = base64;
-                    avatarPreview.classList.remove('hidden');
-                    avatarPlaceholder.classList.add('hidden');
-                    removePhotoBtn.classList.remove('hidden');
-                    this.onDataChanged();
-                });
+                // 1. Validate file type
+                const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Invalid file format. Please upload a JPG, JPEG, PNG, or WebP image.');
+                    photoInput.value = '';
+                    return;
+                }
+                
+                // 2. Validate file size (2MB limit)
+                const maxSize = 2 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert('File is too large. Please upload an image smaller than 2MB.');
+                    photoInput.value = '';
+                    return;
+                }
+
+                // 3. Read and resize image
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Crop to square
+                        const minDim = Math.min(width, height);
+                        const startX = (width - minDim) / 2;
+                        const startY = (height - minDim) / 2;
+                        
+                        const targetDim = 200;
+                        canvas.width = targetDim;
+                        canvas.height = targetDim;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, targetDim, targetDim);
+                        
+                        const resizedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        resumeData.personal.photo = resizedBase64;
+                        avatarPreview.src = resizedBase64;
+                        avatarPreview.classList.remove('hidden');
+                        avatarPlaceholder.classList.add('hidden');
+                        removePhotoBtn.classList.remove('hidden');
+                        this.onDataChanged();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         });
 
@@ -283,7 +325,8 @@ const BuilderSystem = {
         });
     },
 
-    setupCustomizationControls() {
+
+    bindCustomizationControls() {
         const fontSelect = document.getElementById('settings-font');
         const sizeSelect = document.getElementById('settings-font-size');
         const spacingSlider = document.getElementById('settings-section-spacing');
@@ -292,23 +335,9 @@ const BuilderSystem = {
         const pageMarginsSelect = document.getElementById('settings-page-margins-select');
         const lineHeightSelect = document.getElementById('settings-line-height');
 
-        // Apply initial config to form elements
-        fontSelect.value = configData.font;
-        sizeSelect.value = configData.fontSize;
-        spacingSlider.value = configData.spacing;
-        customColorPicker.value = configData.color;
-        if (pageSizeSelect) pageSizeSelect.value = configData.pageSize || 'a4';
-        if (pageMarginsSelect) pageMarginsSelect.value = configData.margins || '20';
-        if (lineHeightSelect) lineHeightSelect.value = configData.lineHeight || 'line-height-comfortable';
-
-        document.getElementById('label-section-spacing').innerText = `${configData.spacing}px`;
-
         // Accent presets
         const colorBtns = document.querySelectorAll('.color-preset-btn');
         colorBtns.forEach(btn => {
-            if (btn.getAttribute('data-color') === configData.color) {
-                btn.classList.add('active');
-            }
             btn.addEventListener('click', () => {
                 colorBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
@@ -372,9 +401,6 @@ const BuilderSystem = {
         // Template Choice cards selector
         const templateCards = document.querySelectorAll('.template-choice');
         templateCards.forEach(card => {
-            if (card.getAttribute('data-template') === configData.template) {
-                card.classList.add('active');
-            }
             card.addEventListener('click', () => {
                 templateCards.forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
@@ -382,6 +408,47 @@ const BuilderSystem = {
                 configData.template = card.getAttribute('data-template');
                 this.onConfigChanged();
             });
+        });
+    },
+
+    syncCustomizationControls() {
+        const fontSelect = document.getElementById('settings-font');
+        const sizeSelect = document.getElementById('settings-font-size');
+        const spacingSlider = document.getElementById('settings-section-spacing');
+        const customColorPicker = document.getElementById('accent-color-picker');
+        const pageSizeSelect = document.getElementById('settings-page-size');
+        const pageMarginsSelect = document.getElementById('settings-page-margins-select');
+        const lineHeightSelect = document.getElementById('settings-line-height');
+
+        if (fontSelect) fontSelect.value = configData.font;
+        if (sizeSelect) sizeSelect.value = configData.fontSize;
+        if (spacingSlider) spacingSlider.value = configData.spacing;
+        if (customColorPicker) customColorPicker.value = configData.color;
+        if (pageSizeSelect) pageSizeSelect.value = configData.pageSize || 'a4';
+        if (pageMarginsSelect) pageMarginsSelect.value = configData.margins || '20';
+        if (lineHeightSelect) lineHeightSelect.value = configData.lineHeight || 'line-height-comfortable';
+
+        const labelSpacing = document.getElementById('label-section-spacing');
+        if (labelSpacing) labelSpacing.innerText = `${configData.spacing}px`;
+
+        // Sync Accent presets active class
+        const colorBtns = document.querySelectorAll('.color-preset-btn');
+        colorBtns.forEach(btn => {
+            if (btn.getAttribute('data-color') === configData.color) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Sync Template Choice cards active class
+        const templateCards = document.querySelectorAll('.template-choice');
+        templateCards.forEach(card => {
+            if (card.getAttribute('data-template') === configData.template) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
         });
     },
 
@@ -761,6 +828,22 @@ const BuilderSystem = {
      * Add clean item record to a dynamic section
      */
     addListItem(section) {
+        const limits = {
+            experience: 20,
+            education: 10,
+            projects: 20,
+            skills: 100,
+            languages: 20,
+            certificates: 30,
+            achievements: 30,
+            references: 10
+        };
+        const currentCount = resumeData[section] ? resumeData[section].length : 0;
+        if (currentCount >= (limits[section] || 50)) {
+            alert(`Maximum limit of ${limits[section]} items reached for this section.`);
+            return;
+        }
+
         if (!resumeData[section]) {
             resumeData[section] = [];
         }
@@ -1003,10 +1086,81 @@ const BuilderSystem = {
                 description: 'Ensure both Email Address and Phone Number are provided. Recruiters and parsing systems require these to route your application.'
             });
         } else {
+            let contactGood = true;
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(p.email.trim())) {
+                contactGood = false;
+                tips.push({
+                    type: 'poor',
+                    title: 'Invalid Email Format',
+                    description: 'The email address provided does not appear to be valid. Please ensure it follows the user@domain.com format.'
+                });
+            }
+            // Phone validation
+            const phoneRegex = /^[\d\s()+-.]+$/;
+            if (!phoneRegex.test(p.phone.trim()) || p.phone.trim().length < 7) {
+                contactGood = false;
+                tips.push({
+                    type: 'warn',
+                    title: 'Invalid Phone Number Format',
+                    description: 'Please ensure your phone number contains a valid country code, area code, and digits.'
+                });
+            }
+            if (contactGood) {
+                tips.push({
+                    type: 'good',
+                    title: 'Contact Details Populated',
+                    description: 'Your email, phone, and address details are present and parseable.'
+                });
+            }
+        }
+
+        // URL format checks
+        const validateUrl = (url, host) => {
+            if (!url) return true;
+            const val = url.trim().toLowerCase();
+            if (host === 'linkedin') return val.includes('linkedin.com');
+            if (host === 'github') return val.includes('github.com');
+            return val.includes('.') && val.length > 3;
+        };
+        if (p.linkedin && !validateUrl(p.linkedin, 'linkedin')) {
             tips.push({
-                type: 'good',
-                title: 'Contact Details Populated',
-                description: 'Your email, phone, and address details are present and parseable.'
+                type: 'warn',
+                title: 'LinkedIn URL Suggestion',
+                description: 'Your LinkedIn link should contain "linkedin.com" to route profile parsing accurately.'
+            });
+        }
+        if (p.github && !validateUrl(p.github, 'github')) {
+            tips.push({
+                type: 'warn',
+                title: 'GitHub URL Suggestion',
+                description: 'Your GitHub link should contain "github.com" to point parsers to your portfolio.'
+            });
+        }
+
+        // Date validation check
+        const validateDateStr = (dateStr) => {
+            if (!dateStr) return true;
+            const val = dateStr.trim();
+            const dateRegex = /^(present|current|till date|now|\d{4}|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{4}|\d{2}\/\d{2,4})([\s-–—]+(present|current|till date|now|\d{4}|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{4}|\d{2}\/\d{2,4}))?$/i;
+            return dateRegex.test(val);
+        };
+        let invalidDates = false;
+        ['experience', 'education', 'projects', 'volunteer'].forEach(sec => {
+            if (resumeData[sec]) {
+                resumeData[sec].forEach(item => {
+                    if ((item.start && !validateDateStr(item.start)) || (item.end && !validateDateStr(item.end))) {
+                        invalidDates = true;
+                    }
+                });
+            }
+        });
+        if (invalidDates) {
+            tips.push({
+                type: 'warn',
+                title: 'Unusual Date Format Detected',
+                description: 'Some date fields contain non-standard formats. Recommend standard formats (e.g. "MMM YYYY", "YYYY", or "Present") for consistency.'
             });
         }
 
@@ -1025,11 +1179,11 @@ const BuilderSystem = {
                     title: 'Summary is too brief',
                     description: 'Expand your summary slightly (aim for 150-300 characters) to better detail achievements.'
                 });
-            } else if (charCount > 500) {
+            } else if (charCount > 1000) {
                 tips.push({
                     type: 'warn',
-                    title: 'Summary is too wordy',
-                    description: 'Shorten your summary. Clean ATS parsing favors bullet points over massive paragraphs (keep it under 400 characters).'
+                    title: 'Summary is too long',
+                    description: 'Keep professional summaries under 1000 characters to prevent parsing issues.'
                 });
             } else {
                 tips.push({
@@ -1050,9 +1204,14 @@ const BuilderSystem = {
         } else {
             // Check descriptions length
             let shortDesc = false;
+            let bulletTooLong = false;
             resumeData.experience.forEach(exp => {
                 if (exp.details && exp.details.trim().length < 30) {
                     shortDesc = true;
+                }
+                if (exp.details) {
+                    const lines = exp.details.split('\n');
+                    lines.forEach(l => { if (l.trim().length > 300) bulletTooLong = true; });
                 }
             });
             if (shortDesc) {
@@ -1060,6 +1219,12 @@ const BuilderSystem = {
                     type: 'warn',
                     title: 'Thin Job Descriptions',
                     description: 'Add more descriptive achievements and responsibilities to your work roles (preferably using bullet lists).'
+                });
+            } else if (bulletTooLong) {
+                tips.push({
+                    type: 'warn',
+                    title: 'Work Experience Bullet Too Wordy',
+                    description: 'One or more work experience bullets exceed 300 characters. Keep bullets concise.'
                 });
             } else {
                 tips.push({
@@ -1078,11 +1243,23 @@ const BuilderSystem = {
                 description: 'Include at least 5-10 core skills. ATS parsers match skills in your resume against the job description.'
             });
         } else {
-            tips.push({
-                type: 'good',
-                title: 'Core Skills Registered',
-                description: 'Your skills list contains sufficient entries for index matching.'
+            let skillTooLong = false;
+            resumeData.skills.forEach(s => {
+                if (s.name && s.name.length > 50) skillTooLong = true;
             });
+            if (skillTooLong) {
+                tips.push({
+                    type: 'warn',
+                    title: 'Skill Names Too Long',
+                    description: 'Some skill names exceed 50 characters. Keep skills short and punchy for clean rendering.'
+                });
+            } else {
+                tips.push({
+                    type: 'good',
+                    title: 'Core Skills Registered',
+                    description: 'Your skills list contains sufficient entries for index matching.'
+                });
+            }
         }
 
         // 5. Projects checklist
@@ -1116,6 +1293,27 @@ const BuilderSystem = {
                 title: 'Standard Core Headings Used',
                 description: 'Your layout includes "Experience" and "Education" which standard parsing engines easily index.'
             });
+        }
+
+        // Section item limits check
+        const limits = {
+            experience: 20,
+            education: 10,
+            projects: 20,
+            skills: 100,
+            languages: 20,
+            certificates: 30,
+            achievements: 30,
+            references: 10
+        };
+        for (let sec in limits) {
+            if (resumeData[sec] && resumeData[sec].length > limits[sec]) {
+                tips.push({
+                    type: 'warn',
+                    title: `Too Many ${sec.charAt(0).toUpperCase() + sec.slice(1)} Entries`,
+                    description: `You have exceeded the recommended limit of ${limits[sec]} entries for the ${sec} section.`
+                });
+            }
         }
 
         return tips;

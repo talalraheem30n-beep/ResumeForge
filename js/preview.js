@@ -74,7 +74,8 @@ const PreviewSystem = {
         const viewportWidth = viewport.clientWidth - (padding * 2);
         
         // Check dynamic page sizes
-        const isLetter = doc.classList.contains('page-size-letter');
+        const firstPage = doc.querySelector('.cv-page');
+        const isLetter = firstPage ? firstPage.classList.contains('page-size-letter') : false;
         const a4Width = isLetter ? 816 : 794;
         const a4PageHeight = isLetter ? 1056 : 1123;
 
@@ -104,64 +105,37 @@ const PreviewSystem = {
     },
 
     /**
-     * Scans preview document height, determines page count, and renders guidelines
+     * Escape HTML helper
+     */
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    /**
+     * Scans preview document, counts page elements, and updates indicator
      */
     updatePageCountAndBreaks() {
         const doc = document.getElementById('resume-document');
-        const wrapper = document.getElementById('a4-page-wrapper');
         const pageCountLabel = document.getElementById('lbl-page-count');
         
-        if (!doc || !wrapper) return;
+        if (!doc) return;
 
-        // Remove old page break helper indicators
-        const oldLines = wrapper.querySelectorAll('.page-break-indicator');
-        oldLines.forEach(l => l.remove());
-
-        const docHeight = doc.offsetHeight;
-        const isLetter = doc.classList.contains('page-size-letter');
-        const pagePixelHeight = isLetter ? 1056 : 1123; // A4 vs Letter height limit
-        const pageCount = Math.max(1, Math.ceil(docHeight / pagePixelHeight));
+        const pages = doc.querySelectorAll('.cv-page');
+        const pageCount = Math.max(1, pages.length);
 
         if (pageCountLabel) {
             pageCountLabel.innerText = `${pageCount} Page${pageCount > 1 ? 's' : ''}`;
         }
-
-        // Render page break guides in editor mode so user can see splitting lines
-        for (let i = 1; i < pageCount; i++) {
-            const breakLine = document.createElement('div');
-            breakLine.className = 'page-break-indicator';
-            
-            // Absolute position the line relative to wrapper scale
-            breakLine.style.position = 'absolute';
-            breakLine.style.top = `${i * pagePixelHeight}px`;
-            breakLine.style.left = '0';
-            breakLine.style.width = '100%';
-            breakLine.style.height = '0';
-            breakLine.style.borderTop = '2px dashed #f43f5e';
-            breakLine.style.zIndex = '50';
-            breakLine.style.pointerEvents = 'none';
-
-            // Add text label to break indicator
-            const lineLabel = document.createElement('span');
-            lineLabel.innerText = `Page ${i} Break`;
-            lineLabel.style.position = 'absolute';
-            lineLabel.style.right = '10px';
-            lineLabel.style.top = '-9px';
-            lineLabel.style.fontSize = '10px';
-            lineLabel.style.fontWeight = 'bold';
-            lineLabel.style.backgroundColor = '#f43f5e';
-            lineLabel.style.color = '#ffffff';
-            lineLabel.style.padding = '2px 6px';
-            lineLabel.style.borderRadius = '3px';
-            lineLabel.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-
-            breakLine.appendChild(lineLabel);
-            doc.appendChild(breakLine);
-        }
     },
 
     /**
-     * Layout-aware section and item pagination
+     * Layout-aware section and item pagination by DOM splitting
      * @param {HTMLElement} doc The resume document element
      * @param {Object} config The styling/page configurations
      */
@@ -172,186 +146,276 @@ const PreviewSystem = {
         const originalTransform = doc.style.transform;
         doc.style.transform = 'none';
         
-        // Get template name
         const template = config.template || 'modern';
-        
-        // Remove existing spacers
-        doc.querySelectorAll('.pdf-page-break-spacer').forEach(el => el.remove());
-        
-        // Page configurations
-        const isLetter = doc.classList.contains('page-size-letter') || config.pageSize === 'letter';
+        const isLetter = config.pageSize === 'letter';
         const pageHeight = isLetter ? 1056 : 1123;
         
         const marginMm = parseFloat(config.margins || 20);
         const marginPx = Math.round(marginMm * 3.779527559);
         const topMargin = marginPx;
         const bottomMargin = marginPx;
-        const usablePageHeight = pageHeight - topMargin - bottomMargin;
+        const usableHeight = pageHeight - topMargin - bottomMargin;
         
-        // Get containers to paginate based on template
-        const containers = this.getContainersToPaginate(doc, template);
+        let sidebarPages = null;
+        let mainPages = null;
         
-        // Paginate each container
-        containers.forEach(container => {
-            this.paginateContainer(doc, container, pageHeight, topMargin, bottomMargin, usablePageHeight);
-        });
+        if (template === 'modern') {
+            const sidebar = doc.querySelector('.cv-sidebar');
+            const main = doc.querySelector('.cv-main');
+            sidebarPages = this.partitionContainer(doc, sidebar, pageHeight, topMargin, bottomMargin, usableHeight);
+            mainPages = this.partitionContainer(doc, main, pageHeight, topMargin, bottomMargin, usableHeight);
+        } else if (template === 'professional') {
+            const topBand = doc.querySelector('.cv-top-band');
+            const headerContainer = doc.querySelector('.cv-header-container');
+            const headerHeight = (topBand ? topBand.getBoundingClientRect().height : 0) + 
+                                 (headerContainer ? headerContainer.getBoundingClientRect().height : 0);
+            
+            const sideCol = doc.querySelector('.cv-side-col');
+            const mainCol = doc.querySelector('.cv-main-col');
+            
+            sidebarPages = this.partitionContainer(doc, sideCol, pageHeight, topMargin, bottomMargin, usableHeight - headerHeight);
+            mainPages = this.partitionContainer(doc, mainCol, pageHeight, topMargin, bottomMargin, usableHeight - headerHeight);
+        } else {
+            // classic or minimal
+            mainPages = this.partitionContainer(doc, doc, pageHeight, topMargin, bottomMargin, usableHeight);
+        }
+        
+        const totalPages = Math.max(
+            sidebarPages ? sidebarPages.length : 0, 
+            mainPages ? mainPages.length : 0
+        );
+        
+        const pageElements = [];
+        
+        for (let i = 0; i < totalPages; i++) {
+            const pageEl = document.createElement('div');
+            pageEl.className = `a4-document cv-page template-${template} ${config.font} ${config.fontSize} page-size-${config.pageSize || 'a4'} ${config.lineHeight || 'line-height-comfortable'}`;
+            
+            pageEl.style.setProperty('--accent-color', config.color);
+            const r = parseInt(config.color.slice(1, 3), 16);
+            const g = parseInt(config.color.slice(3, 5), 16);
+            const b = parseInt(config.color.slice(5, 7), 16);
+            pageEl.style.setProperty('--accent-light', `rgba(${r}, ${g}, ${b}, 0.08)`);
+            pageEl.style.setProperty('--section-margin', `${config.spacing}px`);
+            pageEl.style.setProperty('--theme-page-margin-val', `${config.margins}mm`);
+            
+            if (template === 'modern') {
+                const sidebarCol = document.createElement('div');
+                sidebarCol.className = 'cv-sidebar';
+                const mainCol = document.createElement('div');
+                mainCol.className = 'cv-main';
+                pageEl.appendChild(sidebarCol);
+                pageEl.appendChild(mainCol);
+                
+                if (sidebarPages && sidebarPages[i]) {
+                    sidebarPages[i].forEach(item => {
+                        this.appendPageItem(sidebarCol, item);
+                    });
+                }
+                if (mainPages && mainPages[i]) {
+                    mainPages[i].forEach(item => {
+                        this.appendPageItem(mainCol, item);
+                    });
+                }
+            } else if (template === 'professional') {
+                const topBand = document.createElement('div');
+                topBand.className = 'cv-top-band';
+                pageEl.appendChild(topBand);
+                
+                const headerContainer = doc.querySelector('.cv-header-container');
+                if (headerContainer && i === 0) {
+                    pageEl.appendChild(headerContainer.cloneNode(true));
+                }
+                
+                const bodyCols = document.createElement('div');
+                bodyCols.className = 'cv-body-cols';
+                pageEl.appendChild(bodyCols);
+                
+                const mainCol = document.createElement('div');
+                mainCol.className = 'cv-main-col';
+                const sideCol = document.createElement('div');
+                sideCol.className = 'cv-side-col';
+                bodyCols.appendChild(mainCol);
+                bodyCols.appendChild(sideCol);
+                
+                if (mainPages && mainPages[i]) {
+                    mainPages[i].forEach(item => {
+                        this.appendPageItem(mainCol, item);
+                    });
+                }
+                if (sidebarPages && sidebarPages[i]) {
+                    sidebarPages[i].forEach(item => {
+                        this.appendPageItem(sideCol, item);
+                    });
+                }
+            } else {
+                // classic or minimal
+                const header = doc.querySelector('.cv-header');
+                if (header && i === 0) {
+                    pageEl.appendChild(header.cloneNode(true));
+                }
+                if (mainPages && mainPages[i]) {
+                    mainPages[i].forEach(item => {
+                        this.appendPageItem(pageEl, item);
+                    });
+                }
+            }
+            
+            pageElements.push(pageEl);
+        }
+        
+        // Rebuild preview container
+        doc.innerHTML = '';
+        pageElements.forEach(el => doc.appendChild(el));
         
         // Restore original transform
         doc.style.transform = originalTransform;
     },
 
     /**
-     * Get separate column containers to paginate independently
+     * Appends an item or split-section structure to a page container
      */
-    getContainersToPaginate(doc, template) {
-        if (template === 'modern') {
-            const sidebar = doc.querySelector('.cv-sidebar');
-            const main = doc.querySelector('.cv-main');
-            return [sidebar, main].filter(Boolean);
-        } else if (template === 'professional') {
-            const sideCol = doc.querySelector('.cv-side-col');
-            const mainCol = doc.querySelector('.cv-main-col');
-            return [sideCol, mainCol].filter(Boolean);
-        } else {
-            return [doc];
+    appendPageItem(container, item) {
+        if (item instanceof HTMLElement) {
+            container.appendChild(item.cloneNode(true));
+        } else if (item && item.isSplitSection) {
+            const secEl = document.createElement('div');
+            secEl.className = item.sectionClass;
+            if (item.titleHtml) {
+                secEl.innerHTML = item.titleHtml;
+            }
+            item.items.forEach(it => secEl.appendChild(it.cloneNode(true)));
+            container.appendChild(secEl);
         }
     },
 
     /**
-     * Paginate a single container flow of sections and items
+     * Partitions a container's children flow into discrete pages
      */
-    paginateContainer(doc, container, pageHeight, topMargin, bottomMargin, usablePageHeight) {
-        const documentRect = doc.getBoundingClientRect();
-        
-        // Get sections within the container
-        const sections = Array.from(container.querySelectorAll('.cv-section')).filter(section => {
-            return section.parentElement === container || 
-                   section.parentElement.classList.contains('cv-grid-2col') || 
-                   section.parentElement.classList.contains('cv-grid-3col') ||
-                   section.parentElement.classList.contains('cv-body-cols') ||
-                   section.parentElement.parentElement === container;
-        });
+    partitionContainer(doc, container, pageHeight, topMargin, bottomMargin, initialRemaining) {
+        if (!container) return [];
+        const usableHeight = pageHeight - topMargin - bottomMargin;
         
         let pageIndex = 0;
+        let remaining = initialRemaining;
         
-        for (let sIndex = 0; sIndex < sections.length; sIndex++) {
-            const section = sections[sIndex];
-            
-            // Measure current section top
-            let sectionRect = section.getBoundingClientRect();
-            let sectionTop = sectionRect.top - documentRect.top;
-            
-            // Advance pageIndex to match the page where this section starts
-            while (sectionTop >= (pageIndex + 1) * pageHeight) {
-                pageIndex++;
+        const pages = [];
+        const getPage = (idx) => {
+            while (pages.length <= idx) {
+                pages.push([]);
             }
+            return pages[idx];
+        };
+        
+        const children = Array.from(container.children);
+        
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            const h = child.getBoundingClientRect().height;
+            if (h <= 0) continue;
             
-            let pageTop = pageIndex * pageHeight;
-            let pageBottomLimit = pageTop + pageHeight - bottomMargin;
-            
-            let sectionHeight = sectionRect.height;
-            let sectionBottom = sectionTop + sectionHeight;
-            
-            // 1. Check if the entire section fits on the current page
-            if (sectionBottom <= pageBottomLimit) {
-                // Section fits completely on this page.
+            // If it's not a section (e.g. photo wrapper or header)
+            if (!child.classList.contains('cv-section')) {
+                if (h > remaining && remaining < usableHeight) {
+                    pageIndex++;
+                    remaining = usableHeight - h;
+                } else {
+                    remaining -= h;
+                }
+                getPage(pageIndex).push(child.cloneNode(true));
                 continue;
             }
             
-            // 2. The section does NOT fit on the current page.
-            // Can it fit on the next page?
-            const fitsOnNextPage = sectionHeight <= usablePageHeight;
+            const section = child;
+            const sectionHeight = section.getBoundingClientRect().height;
+            const heading = section.querySelector('.cv-section-title, .cv-section-header');
+            const headingText = heading ? heading.innerText.trim() : '';
             
-            if (fitsOnNextPage && sectionTop > (pageTop + topMargin + 5)) {
-                // Push the entire section to the next page
-                const spacer = document.createElement('div');
-                spacer.className = 'pdf-page-break-spacer';
-                const nextPageTop = (pageIndex + 1) * pageHeight;
-                const spacerHeight = (nextPageTop + topMargin) - sectionTop;
-                spacer.style.height = `${spacerHeight}px`;
-                
-                section.parentNode.insertBefore(spacer, section);
-                
-                // Advance to the next page
-                pageIndex++;
-                
-                // Re-measure after pushing
-                sectionRect = section.getBoundingClientRect();
-                sectionTop = sectionRect.top - documentRect.top;
+            // Locate dynamic list items inside this section
+            const items = Array.from(section.querySelectorAll('.cv-item, .skills-grid, .language-item, .languages-list, .cv-references-grid'));
+            
+            // If it has no splitable items, treat the entire section as a single block
+            if (items.length === 0) {
+                if (sectionHeight > remaining && remaining < usableHeight) {
+                    pageIndex++;
+                    remaining = usableHeight - sectionHeight;
+                } else {
+                    remaining -= sectionHeight;
+                }
+                getPage(pageIndex).push(section.cloneNode(true));
                 continue;
             }
             
-            // 3. Section too tall for one page or already at the top. Check items inside.
-            const heading = section.querySelector('.cv-section-title');
-            const items = Array.from(section.querySelectorAll('.cv-item'));
+            // Check if the entire section fits on the current page
+            if (sectionHeight <= remaining) {
+                remaining -= sectionHeight;
+                getPage(pageIndex).push(section.cloneNode(true));
+                continue;
+            }
             
-            if (items.length > 0) {
-                // Check if heading + first item fits together to prevent orphan headings
-                if (heading) {
-                    const headingRect = heading.getBoundingClientRect();
-                    const headingTop = headingRect.top - documentRect.top;
-                    
-                    while (headingTop >= (pageIndex + 1) * pageHeight) {
-                        pageIndex++;
-                    }
-                    pageTop = pageIndex * pageHeight;
-                    pageBottomLimit = pageTop + pageHeight - bottomMargin;
-                    
-                    const firstItem = items[0];
-                    const firstItemRect = firstItem.getBoundingClientRect();
-                    const firstItemBottom = firstItemRect.bottom - documentRect.top;
-                    
-                    if (firstItemBottom > pageBottomLimit && sectionTop > (pageTop + topMargin + 5)) {
-                        const spacer = document.createElement('div');
-                        spacer.className = 'pdf-page-break-spacer';
-                        const nextPageTop = (pageIndex + 1) * pageHeight;
-                        const spacerHeight = (nextPageTop + topMargin) - sectionTop;
-                        spacer.style.height = `${spacerHeight}px`;
-                        
-                        section.parentNode.insertBefore(spacer, section);
-                        
-                        pageIndex++;
-                        
-                        // Re-measure
-                        sectionRect = section.getBoundingClientRect();
-                        sectionTop = sectionRect.top - documentRect.top;
-                        pageTop = pageIndex * pageHeight;
-                        pageBottomLimit = pageTop + pageHeight - bottomMargin;
-                    }
-                }
+            // Check if it fits on the next page
+            if (sectionHeight <= usableHeight && remaining < usableHeight) {
+                pageIndex++;
+                remaining = usableHeight - sectionHeight;
+                getPage(pageIndex).push(section.cloneNode(true));
+                continue;
+            }
+            
+            // Otherwise, split the section items across pages!
+            const hHeading = heading ? heading.getBoundingClientRect().height : 0;
+            const firstItem = items[0];
+            const hFirstItem = firstItem ? firstItem.getBoundingClientRect().height : 0;
+            
+            if ((hHeading + hFirstItem) > remaining && remaining < usableHeight) {
+                pageIndex++;
+                remaining = usableHeight;
+            }
+            
+            let currentItemsForPage = [];
+            let pageTitleHtml = heading ? heading.outerHTML : '';
+            
+            if (firstItem) {
+                currentItemsForPage.push(firstItem.cloneNode(true));
+                remaining -= (hHeading + hFirstItem + 6);
+            }
+            
+            for (let itemIdx = 1; itemIdx < items.length; itemIdx++) {
+                const item = items[itemIdx];
+                const hItem = item.getBoundingClientRect().height;
                 
-                // Process each item individually
-                for (let i = 0; i < items.length; i++) {
-                    const item = items[i];
-                    let itemRect = item.getBoundingClientRect();
-                    let itemTop = itemRect.top - documentRect.top;
-                    let itemBottom = itemRect.bottom - documentRect.top;
-                    
-                    while (itemTop >= (pageIndex + 1) * pageHeight) {
-                        pageIndex++;
+                if (hItem <= remaining) {
+                    currentItemsForPage.push(item.cloneNode(true));
+                    remaining -= (hItem + 6);
+                } else {
+                    if (currentItemsForPage.length > 0) {
+                        getPage(pageIndex).push({
+                            isSplitSection: true,
+                            sectionClass: section.className,
+                            titleHtml: pageTitleHtml,
+                            items: currentItemsForPage
+                        });
                     }
-                    pageTop = pageIndex * pageHeight;
-                    pageBottomLimit = pageTop + pageHeight - bottomMargin;
                     
-                    if (itemBottom > pageBottomLimit && itemTop > (pageTop + topMargin + 5)) {
-                        const spacer = document.createElement('div');
-                        spacer.className = 'pdf-page-break-spacer';
-                        const nextPageTop = (pageIndex + 1) * pageHeight;
-                        const spacerHeight = (nextPageTop + topMargin) - itemTop;
-                        spacer.style.height = `${spacerHeight}px`;
-                        
-                        item.parentNode.insertBefore(spacer, item);
-                        
-                        pageIndex++;
-                        
-                        // Re-measure
-                        itemRect = item.getBoundingClientRect();
-                        itemTop = itemRect.top - documentRect.top;
-                        itemBottom = itemRect.bottom - documentRect.top;
-                    }
+                    pageIndex++;
+                    remaining = usableHeight - hItem;
+                    currentItemsForPage = [item.cloneNode(true)];
+                    
+                    // Continued title
+                    pageTitleHtml = heading ? `<div class="cv-section-title continued-title" style="margin-top: 0 !important;">${this.escapeHtml(headingText)} (Continued)</div>` : '';
                 }
+            }
+            
+            if (currentItemsForPage.length > 0) {
+                getPage(pageIndex).push({
+                    isSplitSection: true,
+                    sectionClass: section.className,
+                    titleHtml: pageTitleHtml,
+                    items: currentItemsForPage
+                });
             }
         }
+        
+        return pages;
     },
 
     /**

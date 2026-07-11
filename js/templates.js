@@ -4,8 +4,44 @@ const TemplateSystem = {
     /**
      * Safe string helper – converts undefined/null to empty string
      */
+    /**
+     * Escape HTML special characters to prevent XSS
+     */
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    /**
+     * Safe string helper – converts undefined/null to empty string, escapes HTML, and preserves newlines
+     */
     s(val) {
-        return (val === undefined || val === null) ? '' : val;
+        if (val === undefined || val === null) return '';
+        return this.escapeHtml(val).replace(/\n/g, '<br>');
+    },
+
+    /**
+     * Safe profile image parser – validates data URLs and image links
+     */
+    safePhoto(val) {
+        if (!val) return '';
+        const trimmed = val.trim();
+        if (/^data:image\/(jpeg|png|jpg|webp|svg\+xml);base64,/i.test(trimmed)) {
+            return trimmed;
+        }
+        if (/^data:image\/svg\+xml;utf8,/i.test(trimmed)) {
+            // Encode double quotes so they don't break HTML src="..." attributes
+            return trimmed.replace(/"/g, '%22');
+        }
+        if (/^https?:\/\//i.test(trimmed)) {
+            return this.escapeHtml(trimmed);
+        }
+        return '';
     },
 
     /**
@@ -41,7 +77,7 @@ const TemplateSystem = {
             if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
                 cleanLine = line.substring(1).trim();
             }
-            return `<li>${cleanLine}</li>`;
+            return `<li>${this.escapeHtml(cleanLine)}</li>`;
         }).join('');
         
         return `<ul>${listItems}</ul>`;
@@ -52,24 +88,30 @@ const TemplateSystem = {
      */
     renderContactItem(val, icon, label, isUrl = false) {
         if (!val) return '';
-        let displayVal = val;
-        let href = val;
+        let displayVal = val.trim();
+        let href = val.trim();
         
         // Clean URL display
         if (isUrl) {
-            displayVal = val.replace(/^(https?:\/\/)?(www\.)?/, '');
+            displayVal = displayVal.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
             if (!/^https?:\/\//i.test(href)) {
                 href = 'https://' + href;
             }
+            href = this.escapeHtml(href);
+            displayVal = this.escapeHtml(displayVal);
         } else if (icon === 'mail') {
-            href = `mailto:${val}`;
+            displayVal = this.escapeHtml(displayVal);
+            href = `mailto:${displayVal}`;
         } else if (icon === 'phone') {
-            href = `tel:${val}`;
+            displayVal = this.escapeHtml(displayVal);
+            href = `tel:${displayVal.replace(/[^\d+]/g, '')}`;
+        } else {
+            displayVal = this.escapeHtml(displayVal);
         }
         
         return `
-            <div class="cv-contact-item" title="${label}">
-                <i data-lucide="${icon}"></i>
+            <div class="cv-contact-item" title="${this.escapeHtml(label)}">
+                <i data-lucide="${this.escapeHtml(icon)}"></i>
                 ${isUrl || icon === 'mail' || icon === 'phone' 
                     ? `<a href="${href}" target="_blank">${displayVal}</a>` 
                     : `<span>${displayVal}</span>`
@@ -89,7 +131,7 @@ const TemplateSystem = {
         if (hasPhoto) {
             sidebarHtml += `
                 <div class="cv-photo-wrapper">
-                    <img src="${this.s(data.personal.photo)}" class="cv-photo" alt="${this.s(data.personal.name)}">
+                    <img src="${this.safePhoto(data.personal.photo)}" class="cv-photo" alt="${this.s(data.personal.name)}">
                 </div>
             `;
         }
@@ -334,7 +376,7 @@ const TemplateSystem = {
         if (hasPhoto) {
             html += `
                 <div class="cv-photo-wrapper">
-                    <img src="${this.s(data.personal.photo)}" class="cv-photo" style="border-radius: 50%;" alt="${this.s(data.personal.name)}">
+                    <img src="${this.safePhoto(data.personal.photo)}" class="cv-photo" style="border-radius: 50%;" alt="${this.s(data.personal.name)}">
                 </div>
             `;
         }
@@ -586,7 +628,7 @@ const TemplateSystem = {
                 </div>
                 ${hasPhoto ? `
                     <div>
-                        <img src="${this.s(data.personal.photo)}" class="cv-photo" style="width: 80px; height: 80px; border-radius: var(--radius-sm);" alt="${this.s(data.personal.name)}">
+                        <img src="${this.safePhoto(data.personal.photo)}" class="cv-photo" style="width: 80px; height: 80px; border-radius: var(--radius-sm);" alt="${this.s(data.personal.name)}">
                     </div>
                 ` : ''}
             </div>
@@ -798,7 +840,7 @@ const TemplateSystem = {
         html += `
             <div class="cv-header">
                 <div class="cv-header-left">
-                    ${hasPhoto ? `<img src="${this.s(data.personal.photo)}" class="cv-photo" style="width:70px; height:70px; margin-bottom:10px; border-radius:4px;" alt="${this.s(data.personal.name)}">` : ''}
+                    ${hasPhoto ? `<img src="${this.safePhoto(data.personal.photo)}" class="cv-photo" style="width:70px; height:70px; margin-bottom:10px; border-radius:4px;" alt="${this.s(data.personal.name)}">` : ''}
                     <div class="cv-name">${data.personal.name || 'Your Name'}</div>
                     <div class="cv-title">${data.personal.title || 'Professional Title'}</div>
                 </div>

@@ -15,10 +15,12 @@
 /* Dynamic Page Size Overrides */
 .page-size-a4 {
     width: 210mm;
+    height: 297mm;
     min-height: 297mm;
 }
 .page-size-letter {
     width: 216mm; /* 8.5in */
+    height: 279mm; /* 11in */
     min-height: 279mm; /* 11in */
 }
 
@@ -36,6 +38,7 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    margin-bottom: 24px;
 }
 
 /* Template layout variables default */

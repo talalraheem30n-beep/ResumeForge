@@ -94,6 +94,13 @@ const ExportSystem = {
         const originalWrapperWidth = wrapperEl.style.width;
         const originalWrapperHeight = wrapperEl.style.height;
 
+        // Re-render template & run pagination from a clean state
+        if (window.PreviewSystem && typeof PreviewSystem.updatePreview === 'function') {
+            const dataObj = typeof resumeData !== 'undefined' ? resumeData : {};
+            const configObj = typeof configData !== 'undefined' ? configData : {};
+            PreviewSystem.updatePreview(dataObj, configObj);
+        }
+
         // Reset scaling to 1.0 (actual sizes) for high fidelity capturing
         docEl.style.transform = 'none';
         
@@ -108,10 +115,8 @@ const ExportSystem = {
         wrapperEl.style.width = `${widthPx}px`;
         wrapperEl.style.height = 'auto'; // allow it to stretch naturally
         
-        // Re-run pagination on docEl to guarantee exact partition
-        if (window.PreviewSystem && typeof PreviewSystem.paginateResume === 'function') {
-            PreviewSystem.paginateResume(docEl, typeof configData !== 'undefined' ? configData : {});
-        }
+        // Temporarily remove preview-paginated to prevent flex-squishing of page children during HTML2Canvas capture
+        docEl.classList.remove('preview-paginated');
         
         // Update loader text
         if (loaderTitle) loaderTitle.innerText = 'Exporting...';
@@ -153,14 +158,15 @@ const ExportSystem = {
             console.error('Error during canvas rendering', err);
             this.showToast('Error generating PDF.', 'error');
         } finally {
-            // Restore scaling configurations in the UI
-            docEl.style.transform = originalTransform;
+            // Restore styling configurations in the UI
             wrapperEl.style.width = originalWrapperWidth;
             wrapperEl.style.height = originalWrapperHeight;
 
-            // Re-run pagination with current configData to sync the preview
-            if (window.PreviewSystem && typeof PreviewSystem.paginateResume === 'function') {
-                PreviewSystem.paginateResume(docEl, typeof configData !== 'undefined' ? configData : {});
+            // Re-render template & restore pagination and zoom scaling
+            if (window.PreviewSystem && typeof PreviewSystem.updatePreview === 'function') {
+                const dataObj = typeof resumeData !== 'undefined' ? resumeData : {};
+                const configObj = typeof configData !== 'undefined' ? configData : {};
+                PreviewSystem.updatePreview(dataObj, configObj);
             }
 
             // Wait 1.2 seconds and hide loader overlay

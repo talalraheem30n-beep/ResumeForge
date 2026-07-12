@@ -237,6 +237,7 @@
 }
 
 .template-modern .cv-sidebar {
+    flex: 0 0 32%;
     width: 32%;
     background-color: #f8fafc;
     border-right: 1px solid #e2e8f0;
@@ -248,6 +249,7 @@
 }
 
 .template-modern .cv-main {
+    flex: 0 0 68%;
     width: 68%;
     padding: var(--page-margin) var(--page-margin) var(--page-margin) 24px;
     display: flex;
@@ -392,6 +394,7 @@
 }
 
 .template-professional .cv-main-col {
+    flex: 0 0 65%;
     width: 65%;
     padding: 20px 20px var(--page-margin) var(--page-margin);
     display: flex;
@@ -401,6 +404,7 @@
 }
 
 .template-professional .cv-side-col {
+    flex: 0 0 35%;
     width: 35%;
     background-color: #fafafa;
     border-left: 1px solid #e2e8f0;

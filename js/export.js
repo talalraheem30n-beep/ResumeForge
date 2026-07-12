@@ -115,9 +115,6 @@ const ExportSystem = {
         wrapperEl.style.width = `${widthPx}px`;
         wrapperEl.style.height = 'auto'; // allow it to stretch naturally
         
-        // Temporarily remove preview-paginated to prevent flex-squishing of page children during HTML2Canvas capture
-        docEl.classList.remove('preview-paginated');
-        
         // Update loader text
         if (loaderTitle) loaderTitle.innerText = 'Exporting...';
         if (loaderSubtitle) loaderSubtitle.innerText = 'Rendering canvas frames at high density.';

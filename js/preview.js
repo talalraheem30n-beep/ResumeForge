@@ -253,10 +253,6 @@ const PreviewSystem = {
                 }
             } else {
                 // classic or minimal
-                const header = doc.querySelector('.cv-header');
-                if (header && i === 0) {
-                    pageEl.appendChild(header.cloneNode(true));
-                }
                 if (mainPages && mainPages[i]) {
                     mainPages[i].forEach(item => {
                         this.appendPageItem(pageEl, item);

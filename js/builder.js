@@ -628,96 +628,96 @@ const BuilderSystem = {
             return `
                 <div class="form-group col-span-2">
                     <label>Company / Employer</label>
-                    <input type="text" class="card-input" data-key="company" value="${item.company || ''}" placeholder="Acme Corp">
+                    <input type="text" class="card-input" data-key="company" value="${item.company || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Job Title / Role</label>
-                    <input type="text" class="card-input" data-key="role" value="${item.role || ''}" placeholder="Software Engineer">
+                    <input type="text" class="card-input" data-key="role" value="${item.role || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Location</label>
-                    <input type="text" class="card-input" data-key="location" value="${item.location || ''}" placeholder="New York, NY">
+                    <input type="text" class="card-input" data-key="location" value="${item.location || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Start Date</label>
-                    <input type="text" class="card-input" data-key="start" value="${item.start || ''}" placeholder="Jan 2024">
+                    <input type="text" class="card-input" data-key="start" value="${item.start || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>End Date</label>
-                    <input type="text" class="card-input" data-key="end" value="${item.end || ''}" placeholder="Present">
+                    <input type="text" class="card-input" data-key="end" value="${item.end || ''}" placeholder="">
                 </div>
                 <div class="form-group col-span-2">
                     <label>Job Description / Key Achievements (one per line)</label>
-                    <textarea class="card-input" data-key="details" rows="4" placeholder="- Developed responsive web applications using CSS3 variables.&#10;- Increased page speeds by 30%.">${item.details || ''}</textarea>
+                    <textarea class="card-input" data-key="details" rows="4" placeholder=""></textarea>
                 </div>
             `;
         } else if (section === 'education') {
             return `
                 <div class="form-group col-span-2">
                     <label>School / University</label>
-                    <input type="text" class="card-input" data-key="school" value="${item.school || ''}" placeholder="Stanford University">
+                    <input type="text" class="card-input" data-key="school" value="${item.school || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Degree / Field of Study</label>
-                    <input type="text" class="card-input" data-key="degree" value="${item.degree || ''}" placeholder="B.S. Computer Science">
+                    <input type="text" class="card-input" data-key="degree" value="${item.degree || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Location</label>
-                    <input type="text" class="card-input" data-key="location" value="${item.location || ''}" placeholder="Stanford, CA">
+                    <input type="text" class="card-input" data-key="location" value="${item.location || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Start Date</label>
-                    <input type="text" class="card-input" data-key="start" value="${item.start || ''}" placeholder="2020">
+                    <input type="text" class="card-input" data-key="start" value="${item.start || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>End Date</label>
-                    <input type="text" class="card-input" data-key="end" value="${item.end || ''}" placeholder="2024">
+                    <input type="text" class="card-input" data-key="end" value="${item.end || ''}" placeholder="">
                 </div>
                 <div class="form-group col-span-2">
                     <label>Additional details / GPA / Coursework</label>
-                    <textarea class="card-input" data-key="details" rows="2" placeholder="GPA: 3.8. Specialized in web development.">${item.details || ''}</textarea>
+                    <textarea class="card-input" data-key="details" rows="2" placeholder="">${item.details || ''}</textarea>
                 </div>
             `;
         } else if (section === 'projects') {
             return `
                 <div class="form-group">
                     <label>Project Title</label>
-                    <input type="text" class="card-input" data-key="title" value="${item.title || ''}" placeholder="ResumeForge">
+                    <input type="text" class="card-input" data-key="title" value="${item.title || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Project Link / URL</label>
-                    <input type="url" class="card-input" data-key="link" value="${item.link || ''}" placeholder="github.com/resumeforge">
+                    <input type="url" class="card-input" data-key="link" value="${item.link || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Role / Focus</label>
-                    <input type="text" class="card-input" data-key="role" value="${item.role || ''}" placeholder="Lead Developer">
+                    <input type="text" class="card-input" data-key="role" value="${item.role || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Dates</label>
-                    <input type="text" class="card-input" data-key="start" value="${item.start || ''}" placeholder="2026">
+                    <input type="text" class="card-input" data-key="start" value="${item.start || ''}" placeholder="">
                 </div>
                 <input type="hidden" class="card-input" data-key="end" value="${item.end || ''}">
                 <div class="form-group col-span-2">
                     <label>Project Details / Technologies Used (one per line)</label>
-                    <textarea class="card-input" data-key="details" rows="3" placeholder="- Built landing pages using flexbox grids.&#10;- Integrated canvas vector image conversions.">${item.details || ''}</textarea>
+                    <textarea class="card-input" data-key="details" rows="3" placeholder="">${item.details || ''}</textarea>
                 </div>
             `;
         } else if (section === 'skills') {
             return `
                 <div class="form-group">
                     <label>Skill Name</label>
-                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="JavaScript">
+                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Level / Category (Optional)</label>
-                    <input type="text" class="card-input" data-key="level" value="${item.level || ''}" placeholder="Expert / Language">
+                    <input type="text" class="card-input" data-key="level" value="${item.level || ''}" placeholder="">
                 </div>
             `;
         } else if (section === 'languages') {
             return `
                 <div class="form-group">
                     <label>Language Name</label>
-                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="Spanish">
+                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Proficiency</label>
@@ -737,87 +737,87 @@ const BuilderSystem = {
             return `
                 <div class="form-group col-span-2">
                     <label>Certificate Name</label>
-                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="AWS Certified Solutions Architect">
+                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Issuing Organization</label>
-                    <input type="text" class="card-input" data-key="issuer" value="${item.issuer || ''}" placeholder="Amazon Web Services">
+                    <input type="text" class="card-input" data-key="issuer" value="${item.issuer || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Date Earned</label>
-                    <input type="text" class="card-input" data-key="date" value="${item.date || ''}" placeholder="Jan 2025">
+                    <input type="text" class="card-input" data-key="date" value="${item.date || ''}" placeholder="">
                 </div>
                 <div class="form-group col-span-2">
                     <label>Credential URL</label>
-                    <input type="url" class="card-input" data-key="link" value="${item.link || ''}" placeholder="aws.amazon.com/credentials">
+                    <input type="url" class="card-input" data-key="link" value="${item.link || ''}" placeholder="">
                 </div>
             `;
         } else if (section === 'achievements') {
             return `
                 <div class="form-group">
                     <label>Achievement Title</label>
-                    <input type="text" class="card-input" data-key="title" value="${item.title || ''}" placeholder="First Place in Global Hackathon">
+                    <input type="text" class="card-input" data-key="title" value="${item.title || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Date</label>
-                    <input type="text" class="card-input" data-key="date" value="${item.date || ''}" placeholder="2025">
+                    <input type="text" class="card-input" data-key="date" value="${item.date || ''}" placeholder="">
                 </div>
                 <div class="form-group col-span-2">
                     <label>Description / Details (one per line)</label>
-                    <textarea class="card-input" data-key="details" rows="3" placeholder="- Competed with 300 developers globally.&#10;- Designed a static search engine in 24 hours.">${item.details || ''}</textarea>
+                    <textarea class="card-input" data-key="details" rows="3" placeholder="">${item.details || ''}</textarea>
                 </div>
             `;
         } else if (section === 'volunteer') {
             return `
                 <div class="form-group">
                     <label>Organization</label>
-                    <input type="text" class="card-input" data-key="organization" value="${item.organization || ''}" placeholder="Red Cross">
+                    <input type="text" class="card-input" data-key="organization" value="${item.organization || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Volunteer Role</label>
-                    <input type="text" class="card-input" data-key="role" value="${item.role || ''}" placeholder="Disaster Relief Volunteer">
+                    <input type="text" class="card-input" data-key="role" value="${item.role || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Start Date</label>
-                    <input type="text" class="card-input" data-key="start" value="${item.start || ''}" placeholder="2022">
+                    <input type="text" class="card-input" data-key="start" value="${item.start || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>End Date</label>
-                    <input type="text" class="card-input" data-key="end" value="${item.end || ''}" placeholder="2023">
+                    <input type="text" class="card-input" data-key="end" value="${item.end || ''}" placeholder="">
                 </div>
                 <div class="form-group col-span-2">
                     <label>Volunteer Details (one per line)</label>
-                    <textarea class="card-input" data-key="details" rows="3" placeholder="- Coordinated relief logistics.&#10;- Managed database entries for volunteers.">${item.details || ''}</textarea>
+                    <textarea class="card-input" data-key="details" rows="3" placeholder="">${item.details || ''}</textarea>
                 </div>
             `;
         } else if (section === 'interests') {
             return `
                 <div class="form-group col-span-2">
                     <label>Interest / Hobby Name</label>
-                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="Open Source Development">
+                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="">
                 </div>
             `;
         } else if (section === 'references') {
             return `
                 <div class="form-group">
                     <label>Reference Name</label>
-                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="Jane Smith">
+                    <input type="text" class="card-input" data-key="name" value="${item.name || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Position / Role</label>
-                    <input type="text" class="card-input" data-key="position" value="${item.position || ''}" placeholder="Director of Engineering">
+                    <input type="text" class="card-input" data-key="position" value="${item.position || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Company</label>
-                    <input type="text" class="card-input" data-key="company" value="${item.company || ''}" placeholder="Acme Corp">
+                    <input type="text" class="card-input" data-key="company" value="${item.company || ''}" placeholder="">
                 </div>
                 <div class="form-group">
                     <label>Contact Coordinates (Email / Phone)</label>
-                    <input type="text" class="card-input" data-key="contact" value="${item.contact || ''}" placeholder="jane.smith@acme.com">
+                    <input type="text" class="card-input" data-key="contact" value="${item.contact || ''}" placeholder="">
                 </div>
                 <div class="form-group col-span-2">
                     <label>Additional Notes / Quote (Optional)</label>
-                    <textarea class="card-input" data-key="details" rows="2" placeholder="Understands system architecture thoroughly. Highly recommended.">${item.details || ''}</textarea>
+                    <textarea class="card-input" data-key="details" rows="2" placeholder="">${item.details || ''}</textarea>
                 </div>
             `;
         }

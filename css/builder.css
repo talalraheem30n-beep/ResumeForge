@@ -1155,7 +1155,6 @@ input[type="range"] {
     font-size: 0.78rem;
     color: var(--text-muted);
     font-weight: 500;
-    margin-top: 4px;
     transition: color var(--transition-fast);
 }
 .autosave-status.saving {

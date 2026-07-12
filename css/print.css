@@ -122,6 +122,19 @@
         display: flex !important;
         flex-direction: column !important;
     }
+
+    /* Prevent double padding and page-break bugs on the container during printing */
+    #resume-document {
+        display: block !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+    }
 }
 
 /* Page configurations */

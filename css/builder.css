@@ -1323,6 +1323,33 @@ input[type="range"] {
     line-height: 1.4;
 }
 
+/* ==========================================================================
+   VERTICAL MULTI-PAGE PREVIEW LAYOUT OVERRIDES
+   ========================================================================== */
 
+/* Enforce vertical stacking, horizontal centering, and consistent gaps for preview */
+#resume-document.preview-paginated {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 24px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    transform-origin: top center !important;
+}
 
+/* Reset spacing managed by container gap */
+#resume-document.preview-paginated .cv-page {
+    margin-bottom: 0 !important;
+}
 
+/* Restrict horizontal scrolling in the viewport */
+.preview-container-viewport {
+    overflow-x: hidden !important;
+}

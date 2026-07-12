@@ -142,6 +142,9 @@ const PreviewSystem = {
     paginateResume(doc, config) {
         if (!doc) return;
         
+        // Remove styling override class before pagination measurement
+        doc.classList.remove('preview-paginated');
+        
         // Save current transform to restore later
         const originalTransform = doc.style.transform;
         doc.style.transform = 'none';
@@ -267,6 +270,9 @@ const PreviewSystem = {
         // Rebuild preview container
         doc.innerHTML = '';
         pageElements.forEach(el => doc.appendChild(el));
+        
+        // Apply styling override class after pages are generated
+        doc.classList.add('preview-paginated');
         
         // Restore original transform
         doc.style.transform = originalTransform;
